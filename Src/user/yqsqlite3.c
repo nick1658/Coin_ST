@@ -270,7 +270,7 @@ void ini_screen (void)
 	dgus_tf1word(ADDR_KICK_KEEP_T2, para_set_value.data.kick_keep_t2);	//第二个踢币保持时间
 	dgus_tf1word(ADDR_MOTOR_IDLE_T, para_set_value.data.motor_idle_t);	//无币空转等待时间
 	dgus_tf1word(ADDR_PRE_COUNT_STOP_N, para_set_value.data.pre_count_stop_n);	//满币停机数，设置为1则任意一种硬币达到预置数就停机
-	dgus_tf1word(ADDR_LEVEL100,cn0copmaxc0[coinchoose]);	//清分等级，暂时没有设置
+//	dgus_tf1word(ADDR_LEVEL100,cn0copmaxc0[coinchoose]);	//清分等级，暂时没有设置
 	
 
 	//开机 把每个地址的值给初始化赋一下值
@@ -418,7 +418,7 @@ void yqsql_exec(uint16_t chos)
 					{0x0180,0x0190,0x0192,0x0198,0x019E},
 					{0x01A0,0x01B0,0x01B2,0x01B8,0x01BE},
 					};
-			int8_t str_db[20];
+			uint8_t str_db[20];
 			uint32_t temp = 0;
 			uint16_t num = 0;     //计时 显示到6次就结束 
 			
@@ -426,7 +426,7 @@ void yqsql_exec(uint16_t chos)
 				
 			memset(str_db,' ',20);	
 			for(num = 0; num < 6;  num++){ 
-				dgus_chinese(str_addr[num][0],str_db, strlen(str_db));	 // dgus  chinese  time
+				dgus_chinese(str_addr[num][0],str_db, strlen((char *)str_db));	 // dgus  chinese  time
 				dgus_chinese(str_addr[num][0],str_db,8);	 // dgus  chinese  time
 				dgus_chinese(str_addr[num][1],str_db,8);	 // dgus  chinese  gh
 				dgus_chinese(str_addr[num][2],str_db,8);	 // dgus  chinese  ze
@@ -472,10 +472,10 @@ void yqsql_exec(uint16_t chos)
 					for(num = 0; (num < 6); ){
 	 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						temp = db_item_info_temp->index;
-						sprintf(str_db,"%06d ",temp);
+						sprintf((char *)str_db,"%06d ",temp);
 						cy_print("|%s", str_db);
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////					
-						sprintf(str_db,"20%02x-%02x-%02x %02x:%02x",
+						sprintf((char *)str_db,"20%02x-%02x-%02x %02x:%02x",
 							db_item_info_temp->time[0],
 							db_item_info_temp->time[1],
 							db_item_info_temp->time[2],
@@ -483,31 +483,31 @@ void yqsql_exec(uint16_t chos)
 							db_item_info_temp->time[4]);   //read time
 
 						cy_print("|%s", str_db);
-						dgus_chinese(str_addr[num][0],str_db,strlen(str_db));	 // dgus  chinese  time
+						dgus_chinese(str_addr[num][0],str_db,strlen((char *)str_db));	 // dgus  chinese  time
 	 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						temp = db_item_info_temp->ID;
-						sprintf(str_db,"%04d",temp);
+						sprintf((char *)str_db,"%04d",temp);
 						cy_print("|%s", str_db);
-						sprintf(str_db,"%2d",temp);
-						dgus_chinese(str_addr[num][1],str_db,strlen(str_db));	 // dgus  chinese  gh
+						sprintf((char *)str_db,"%2d",temp);
+						dgus_chinese(str_addr[num][1],str_db,strlen((char *)str_db));	 // dgus  chinese  gh
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////					
 						temp =	db_item_info_temp->money;
-						sprintf(str_db,"%10d.%d%d ",(temp/100),((temp%100)/10),((temp%100)%10));
+						sprintf((char *)str_db,"%10d.%d%d ",(temp/100),((temp%100)/10),((temp%100)%10));
 						cy_print("|%s", str_db);
 						sprintf((char*)str_db,"%d.%d",(temp/100),(temp%100));
-						dgus_chinese(str_addr[num][2],str_db,strlen(str_db));	 // dgus  chinese  ze
+						dgus_chinese(str_addr[num][2],str_db,strlen((char *)str_db));	 // dgus  chinese  ze
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						temp =	db_item_info_temp->total_good;
-						sprintf(str_db,"%15d ",temp);
+						sprintf((char *)str_db,"%15d ",temp);
 						cy_print("|%s", str_db);
 						sprintf((char*)str_db,"%d",temp);
-						dgus_chinese(str_addr[num][3],str_db,strlen(str_db));	 // dgus  chinese  zs
+						dgus_chinese(str_addr[num][3],str_db,strlen((char *)str_db));	 // dgus  chinese  zs
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						temp =	db_item_info_temp->total_ng;
-						sprintf(str_db,"%10d ",temp);
+						sprintf((char *)str_db,"%10d ",temp);
 						cy_print("|%s|", str_db);
 						sprintf((char*)str_db,"%d",temp);
-						dgus_chinese(str_addr[num][4],str_db,strlen(str_db));	 // dgus  chinese  fg	
+						dgus_chinese(str_addr[num][4],str_db,strlen((char *)str_db));	 // dgus  chinese  fg	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////					
 						cy_print ("\n|-------|----------------|----|--------------|----------------|-----------|\n");
 						num++;
@@ -554,7 +554,7 @@ void yqsql_exec(uint16_t chos)
 					{0x0180,0x0190,0x0192,0x0198,0x019E},
 					{0x01A0,0x01B0,0x01B2,0x01B8,0x01BE},
 					};
-			int8_t str_db[20];
+			uint8_t str_db[20];
 			uint32_t temp = 0;
 			uint16_t num = 0;     //计时 显示到6次就结束 
 					
@@ -597,21 +597,21 @@ void yqsql_exec(uint16_t chos)
 					
 					for(num = 0; num <6;  num++)  //if  still have history num , clean dgus screen ,then display
 					{
-						dgus_chinese(str_addr[num][0],str_db,strlen(str_db));	 // dgus  chinese  time
-						dgus_chinese(str_addr[num][1],str_db,strlen(str_db));	 // dgus  chinese  gh
-						dgus_chinese(str_addr[num][2],str_db,strlen(str_db));	 // dgus  chinese  ze
-						dgus_chinese(str_addr[num][3],str_db,strlen(str_db));	 // dgus  chinese  zs
-						dgus_chinese(str_addr[num][4],str_db,strlen(str_db));	 // dgus  chinese  fg		
+						dgus_chinese(str_addr[num][0],str_db,strlen((char *)str_db));	 // dgus  chinese  time
+						dgus_chinese(str_addr[num][1],str_db,strlen((char *)str_db));	 // dgus  chinese  gh
+						dgus_chinese(str_addr[num][2],str_db,strlen((char *)str_db));	 // dgus  chinese  ze
+						dgus_chinese(str_addr[num][3],str_db,strlen((char *)str_db));	 // dgus  chinese  zs
+						dgus_chinese(str_addr[num][4],str_db,strlen((char *)str_db));	 // dgus  chinese  fg		
 					}
 					for(num = 0; ((num <6) && (db_id < para_set_value.data.db_total_item_num));)
 					{
 					
 	 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						temp = db_item_info_temp->index;
-						sprintf(str_db,"%06d ",temp);
+						sprintf((char *)str_db,"%06d ",temp);
 						cy_print("|%s", str_db);
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////					
-						sprintf(str_db,"20%02x-%02x-%02x %02x:%02x",
+						sprintf((char *)str_db,"20%02x-%02x-%02x %02x:%02x",
 							db_item_info_temp->time[0],
 							db_item_info_temp->time[1],
 							db_item_info_temp->time[2],
@@ -619,32 +619,32 @@ void yqsql_exec(uint16_t chos)
 							db_item_info_temp->time[4]);   //read time
 
 						cy_print("|%s", str_db);
-						dgus_chinese(str_addr[num][0],str_db,strlen(str_db));	 // dgus  chinese  time
+						dgus_chinese(str_addr[num][0],str_db,strlen((char *)str_db));	 // dgus  chinese  time
 	 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						temp = db_item_info_temp->ID;
-						sprintf(str_db,"%04d",temp);
+						sprintf((char *)str_db,"%04d",temp);
 						cy_print("|%s", str_db);
-						sprintf(str_db,"%2d",temp);
-						dgus_chinese(str_addr[num][1],str_db,strlen(str_db));	 // dgus  chinese  gh
+						sprintf((char *)str_db,"%2d",temp);
+						dgus_chinese(str_addr[num][1],str_db,strlen((char *)str_db));	 // dgus  chinese  gh
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////					
 						temp =	db_item_info_temp->money;	
-						sprintf(str_db,"%10d.%d%d ",(temp/100),((temp%100)/10),((temp%100)%10));
+						sprintf((char *)str_db,"%10d.%d%d ",(temp/100),((temp%100)/10),((temp%100)%10));
 						cy_print("|%s", str_db);
 						sprintf((char*)str_db,"%d.%d",(temp/100),(temp%100));
-						dgus_chinese(str_addr[num][2],str_db,strlen(str_db));	 // dgus  chinese  ze
+						dgus_chinese(str_addr[num][2],str_db,strlen((char *)str_db));	 // dgus  chinese  ze
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						temp =	db_item_info_temp->total_good;
-						sprintf(str_db,"%15d ",temp);
+						sprintf((char *)str_db,"%15d ",temp);
 						cy_print("|%s", str_db);
 						sprintf((char*)str_db,"%d",temp);
-						dgus_chinese(str_addr[num][3],str_db,strlen(str_db));	 // dgus  chinese  zs
+						dgus_chinese(str_addr[num][3],str_db,strlen((char *)str_db));	 // dgus  chinese  zs
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						temp =	db_item_info_temp->total_ng;	
-						sprintf(str_db,"%10d ",temp);
+						sprintf((char *)str_db,"%10d ",temp);
 						cy_print("|%s|", str_db);
 						sprintf((char*)str_db,"%d",temp);
-						dgus_chinese(str_addr[num][4],str_db,strlen(str_db));	 // dgus  chinese  fg	
+						dgus_chinese(str_addr[num][4],str_db,strlen((char *)str_db));	 // dgus  chinese  fg	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 						cy_print ("\n|-------|----------------|----|--------------|----------------|-----------|\n");
 						num++;

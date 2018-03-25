@@ -17,8 +17,13 @@
 #include "yqdrive.h"
 #include "my_cmd.h"
 #include "coin_config.h"
+#include "NAND.h"
 
 
+#define TRUE 	1   
+#define FALSE 	0
+#define OK		1
+#define FAIL	0
 
 //#define __MY_DEBUG__
 #define UART_DEBUG	

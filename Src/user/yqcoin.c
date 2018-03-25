@@ -66,11 +66,11 @@ int16_t is_good_coin (void)
 			&& (( coin_value2 >= coin_cmp_value[i].compare_min2) && ( coin_value2 <= coin_cmp_value[i].compare_max2)))
 		{
 			if (sys_env.save_good_data){
-				GOOD_value_buf[good_value_index].AD0 = coin_value0;
-				GOOD_value_buf[good_value_index].AD1 = coin_value1;
-				GOOD_value_buf[good_value_index].AD2 = coin_value2;
-				GOOD_value_buf[good_value_index].use_index = coin_env.cmp_use_index;
-				GOOD_value_buf[good_value_index].ad_index = coin_env.ad_index;
+//				GOOD_value_buf[good_value_index].AD0 = coin_value0;
+//				GOOD_value_buf[good_value_index].AD1 = coin_value1;
+//				GOOD_value_buf[good_value_index].AD2 = coin_value2;
+//				GOOD_value_buf[good_value_index].use_index = coin_env.cmp_use_index;
+//				GOOD_value_buf[good_value_index].ad_index = coin_env.ad_index;
 				good_value_index++;
 				if (good_value_index >= GOOD_BUF_LENGTH)
 					good_value_index = 0;
@@ -78,12 +78,12 @@ int16_t is_good_coin (void)
 			return i;
 		}	
 	}
-	if (sys_env.save_ng_data){
-		NG_value_buf[ng_value_index].AD0 = coin_value0;
-		NG_value_buf[ng_value_index].AD1 = coin_value1;
-		NG_value_buf[ng_value_index].AD2 = coin_value2;
-		NG_value_buf[ng_value_index].use_index = coin_env.cmp_use_index;
-		NG_value_buf[ng_value_index].ad_index = coin_env.ad_index;
+	if (sys_env.save_ng_data){//
+//		NG_value_buf[ng_value_index].AD0 = coin_value0;
+//		NG_value_buf[ng_value_index].AD1 = coin_value1;
+//		NG_value_buf[ng_value_index].AD2 = coin_value2;
+//		NG_value_buf[ng_value_index].use_index = coin_env.cmp_use_index;
+//		NG_value_buf[ng_value_index].ad_index = coin_env.ad_index;
 		ng_value_index++;
 		if (ng_value_index >= NG_BUF_LENGTH)
 			ng_value_index = 0;
@@ -204,7 +204,7 @@ const char *coin_tips [] = {"Ò»Ôª", "Îå½Ç", "Îå½Ç", "´óÒ»½Ç", "Ò»½Ç", "Ò»½Ç", "Î
  uint16_t prepic_prenum =0;      // ÓÃÓÚ¼ÇÂ¼ ±¨´íÇ°µÄ½çÃæ 
 void alertfuc(uint16_t errorflag) //±¨´í
 {
-	char str_buf[256];
+	uint8_t str_buf[256];
 	dbg ("alert flag is %d", errorflag);
 	switch(errorflag)
 	{	
@@ -233,29 +233,29 @@ void alertfuc(uint16_t errorflag) //±¨´í
 			switch (coin_env.full_stack_num){
 				case 1:
 					if (coin_env.full_coin_stack[0] < TIPS_SIZE){
-						sprintf (str_buf, "Çë¸ü»»%sµÄÖ½Í²¡£", coin_tips[coin_env.full_coin_stack[0]]);
+						sprintf ((char *)str_buf, "Çë¸ü»»%sµÄÖ½Í²¡£", coin_tips[coin_env.full_coin_stack[0]]);
 					}else{
-						sprintf (str_buf, "Êý×éÔ½½ç: %d", coin_env.full_coin_stack[0]);
+						sprintf ((char *)str_buf, "Êý×éÔ½½ç: %d", coin_env.full_coin_stack[0]);
 					}
 					break;
 				case 2:
 					if ((coin_env.full_coin_stack[0] < TIPS_SIZE) && 
 						(coin_env.full_coin_stack[1] < TIPS_SIZE)){
-						sprintf (str_buf, "Çë¸ü»»%sºÍ%sµÄÖ½Í²¡£", 	coin_tips[coin_env.full_coin_stack[0]], 
+						sprintf ((char *)str_buf, "Çë¸ü»»%sºÍ%sµÄÖ½Í²¡£", 	coin_tips[coin_env.full_coin_stack[0]], 
 																	coin_tips[coin_env.full_coin_stack[1]]);
 					}else{
-						sprintf (str_buf, "Êý×éÔ½½ç: %d, %d", coin_env.full_coin_stack[0], coin_env.full_coin_stack[1]);
+						sprintf ((char *)str_buf, "Êý×éÔ½½ç: %d, %d", coin_env.full_coin_stack[0], coin_env.full_coin_stack[1]);
 					}
 					break;
 				case 3:
 					if ((coin_env.full_coin_stack[0] < TIPS_SIZE) && 
 						(coin_env.full_coin_stack[1] < TIPS_SIZE) &&
 						(coin_env.full_coin_stack[2] < TIPS_SIZE)){
-						sprintf (str_buf, "Çë¸ü»»%s¡¢%sºÍ%sµÄÖ½Í²¡£", 	coin_tips[coin_env.full_coin_stack[0]], 
+						sprintf ((char *)str_buf, "Çë¸ü»»%s¡¢%sºÍ%sµÄÖ½Í²¡£", 	coin_tips[coin_env.full_coin_stack[0]], 
 																		coin_tips[coin_env.full_coin_stack[1]], 
 																		coin_tips[coin_env.full_coin_stack[2]]);
 					}else{
-						sprintf (str_buf, "Êý×éÔ½½ç: %d, %d, %d", coin_env.full_coin_stack[0], coin_env.full_coin_stack[1], coin_env.full_coin_stack[2]);
+						sprintf ((char *)str_buf, "Êý×éÔ½½ç: %d, %d, %d", coin_env.full_coin_stack[0], coin_env.full_coin_stack[1], coin_env.full_coin_stack[2]);
 					}
 					break;
 				case 4:
@@ -263,15 +263,15 @@ void alertfuc(uint16_t errorflag) //±¨´í
 						(coin_env.full_coin_stack[1] < TIPS_SIZE) &&
 						(coin_env.full_coin_stack[2] < TIPS_SIZE) &&
 						(coin_env.full_coin_stack[3] < TIPS_SIZE)){
-						sprintf (str_buf, "Çë¸ü»»%s¡¢%s¡¢%sºÍ%sµÄÖ½Í²¡£", coin_tips[coin_env.full_coin_stack[0]], 
+						sprintf ((char *)str_buf, "Çë¸ü»»%s¡¢%s¡¢%sºÍ%sµÄÖ½Í²¡£", coin_tips[coin_env.full_coin_stack[0]], 
 																		coin_tips[coin_env.full_coin_stack[1]], 
 																		coin_tips[coin_env.full_coin_stack[2]], 
 																		coin_tips[coin_env.full_coin_stack[3]]);
 					}else{
-						sprintf (str_buf, "Êý×éÔ½½ç: %d, %d, %d, %d", coin_env.full_coin_stack[0], coin_env.full_coin_stack[1], coin_env.full_coin_stack[2], coin_env.full_coin_stack[3]);
+						sprintf ((char *)str_buf, "Êý×éÔ½½ç: %d, %d, %d, %d", coin_env.full_coin_stack[0], coin_env.full_coin_stack[1], coin_env.full_coin_stack[2], coin_env.full_coin_stack[3]);
 					}
 					break;
-				default:sprintf (str_buf, "ERROR: 1001");break;
+				default:sprintf ((char *)str_buf, "ERROR: 1001");break;
 			}
 			ALERT_MSG ("ÌáÊ¾", str_buf);
 			break;	

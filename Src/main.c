@@ -83,7 +83,7 @@ static void MX_NVIC_Init(void);
 
 /* USER CODE BEGIN 0 */
 
-
+void coin_init (void);
 /* USER CODE END 0 */
 
 /**
@@ -128,7 +128,7 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-	system_env_init ();
+	coin_init ();
 //	HAL_UART_Receive_DMA(&huart1,UsartType.RX_pData,RX_LEN); 
 
   //HAL_UART_Transmit_DMA(&huart1, (uint8_t *)aTxMessage, sizeof(aTxMessage));

@@ -9,7 +9,7 @@ void comscreen(uint8_t* str,int16_t length)  //发送 指令至液晶屏57600bps
 	for(i = 0;i<length;i++)
 	{
 		temp = 	*str;
-		Uart2_sendchar(temp);	
+//		Uart2_sendchar(temp);	
 		str++;
 	}	
 	
@@ -26,8 +26,8 @@ void touchget_from_uart2(void)    //receive the touch from dgus at real time
 {
 
 	uint8_t temp;
-	while(!(rUTRSTAT2&0x1));
-	temp = rURXH2;//读取寄存器值
+//	while(!(rUTRSTAT2&0x1));
+//	temp = rURXH2;//读取寄存器值
 	
 	if(touch_flag ==0)
 	{
@@ -111,7 +111,7 @@ DGUS(UART 1) read real time from dgus
 /*********************************
 chinese 
 **********************************/
-void dgus_chinese(uint16_t addr,int8_t str[],uint16_t strnum)    // dgus  chinese
+void dgus_chinese(uint16_t addr,uint8_t str[],uint16_t strnum)    // dgus  chinese
 {
 
 	uint8_t str1[6] = {0xA5,0x5A,0x00,0x82,0x0F,0x00};
@@ -184,7 +184,7 @@ void disp_allcount(void)     //pre counting ,detail list
     OS_CPU_SR  cpu_sr = 0u;
 #endif
 	if( coinchoose == CN0){
-        OS_ENTER_CRITICAL();
+//        OS_ENTER_CRITICAL();
 		disp_buf.m_1yuan = *(pre_value.country[COUNTRY_ID].coin[0].data.p_pre_count_cur);
 		disp_buf.m_5jiao = (*(pre_value.country[COUNTRY_ID].coin[1].data.p_pre_count_cur));
 		disp_buf.m_1jiao_big = (*(pre_value.country[COUNTRY_ID].coin[3].data.p_pre_count_cur));
@@ -198,7 +198,7 @@ void disp_allcount(void)     //pre counting ,detail list
 		disp_buf.total_ng = processed_coin_info.total_ng;
 		disp_buf.total_money = processed_coin_info.total_money;
 		disp_buf.coin_speed = sys_env.coin_speed;
-        OS_EXIT_CRITICAL();
+//        OS_EXIT_CRITICAL();
 		
 		dgus_tf2word(ADDR_XD10, disp_buf.m_1yuan);		//list 1
 		dgus_tf2word(ADDR_XD5, disp_buf.m_5jiao);					//	 list 0.5		
@@ -227,7 +227,7 @@ void disp_allcount_to_pc (void)
 	pc_print("%d,%d;",19, disp_buf.total_good);
 	pc_print("%d,%d.%d%d;",20, (disp_buf.total_money/100),((disp_buf.total_money%100)/10),((disp_buf.total_money%100)%10));
 	pc_print("%d,%d;",21, disp_buf.total_ng);
-	pc_print("%d,%d;",28, OSCPUUsage);
+//	pc_print("%d,%d;",28, OSCPUUsage);
 	pc_print("%d,%d;",30, disp_buf.m_1jiao_big);
 	if (sys_env.workstep == 1){//停机
 		pc_print("%d,%d;",50, 0);
@@ -515,7 +515,7 @@ volatile int32_t db_id = 0;   //历史数据 表格已经显示 数
 void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 {
 	uint16_t addr, value, i;
-	char str_buf[256];
+	uint8_t str_buf[256];
 	addr = (touchnum[4] << 8) | (touchnum[5]);
 	value = (touchnum[7] << 8) | (touchnum[8]);
 	///////////////A5 5A 06 83 00 06 01 00 0x:1 2/////////////////////////
@@ -648,53 +648,53 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		}else if( (value == 0x0B)){	//back value  特征学习 save or not
 			if (coinlearnnumber == 0){                                                                         
 				cy_println ("coin learnnumber = 0, data will be clear"); 
-				run_command ("set save-f");
+				run_command ("set save-f", 1);
 			}else{
 				prepic_num = TZJM;
 				i = is_repeate (sys_env.coin_index);
 				if (i == 0){
-					sprintf (str_buf, "特征值保存完毕！本次学习硬币数量:%d枚", coinlearnnumber);
-					run_command ("set save");
+					sprintf ((char *)str_buf, "特征值保存完毕！本次学习硬币数量:%d枚", coinlearnnumber);
+					run_command ("set save", 1);
 				}else{
 					switch (i){
 						case 1:
-							sprintf (str_buf, "特征值与1元硬币有冲突！请确认是否混有1元的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与1元硬币有冲突！请确认是否混有1元的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 2:
-							sprintf (str_buf, "特征值与五角铜硬币有冲突！请确认是否混有五角铜的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与五角铜硬币有冲突！请确认是否混有五角铜的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 3:
-							sprintf (str_buf, "特征值与五角钢硬币有冲突！请确认是否混有五角钢的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与五角钢硬币有冲突！请确认是否混有五角钢的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 4:
-							sprintf (str_buf, "特征值与一角大铝硬币有冲突！请确认是否混有一角大铝的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与一角大铝硬币有冲突！请确认是否混有一角大铝的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 5:
-							sprintf (str_buf, "特征值与一角小钢硬币有冲突！请确认是否混有一角小钢的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与一角小钢硬币有冲突！请确认是否混有一角小钢的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 6:
-							sprintf (str_buf, "特征值与一角小铝硬币有冲突！请确认是否混有一角小铝的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与一角小铝硬币有冲突！请确认是否混有一角小铝的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 7:
-							sprintf (str_buf, "特征值与五分硬币有冲突！请确认是否混有五分的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与五分硬币有冲突！请确认是否混有五分的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 8:
-							sprintf (str_buf, "特征值与两分硬币有冲突！请确认是否混有两分的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与两分硬币有冲突！请确认是否混有两分的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 9:
-							sprintf (str_buf, "特征值与一分硬币有冲突！请确认是否混有一分的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与一分硬币有冲突！请确认是否混有一分的硬币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 10:
-							sprintf (str_buf, "特征值与10元纪念币有冲突！请确认是否混有10元纪念币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与10元纪念币有冲突！请确认是否混有10元纪念币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 11:
-							sprintf (str_buf, "特征值与5元纪念币有冲突！请确认是否混有5元纪念币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值与5元纪念币有冲突！请确认是否混有5元纪念币，请清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						case 1002:
-							sprintf (str_buf, "特征值范围太大，请确认是否混有其他种类的硬币，清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
+							sprintf ((char *)str_buf, "特征值范围太大，请确认是否混有其他种类的硬币，清除后重新学习，此次数据不会保存。本次学习硬币数量:%d枚", coinlearnnumber);
 							break;
 						default:
-							sprintf (str_buf, "特征学习异常，本次数据不会保存，请重试");break;
+							sprintf ((char *)str_buf, "特征学习异常，本次数据不会保存，请重试");break;
 					}
 				}
 				ALERT_MSG ("提示", str_buf);
@@ -760,15 +760,15 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		Writekick_value();
 		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
 		break;
-	case ADDR_LEVEL100:  //地址1元硬币的清分等级设置
- 		cn0copmaxc0[coinchoose]= ((int)touchnum[8]);	   //
-		cn0copmaxc1[coinchoose] = ((int)touchnum[8]);
-		cn0copmaxc2[coinchoose] = ((int)touchnum[8]);
-		dgus_tf1word(ADDR_LEVEL100,cn0copmaxc0[coinchoose]);	//make sure  the return one
- 
-		write_para ();
-		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
-		break;
+//	case ADDR_LEVEL100:  //地址1元硬币的清分等级设置
+// 		cn0copmaxc0[coinchoose]= ((int)touchnum[8]);	   //
+//		cn0copmaxc1[coinchoose] = ((int)touchnum[8]);
+//		cn0copmaxc2[coinchoose] = ((int)touchnum[8]);
+//		dgus_tf1word(ADDR_LEVEL100,cn0copmaxc0[coinchoose]);	//make sure  the return one
+// 
+//		write_para ();
+//		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
+//		break;
 	case ADDR_YZS0:
 	case ADDR_YZS1:
 	case ADDR_YZS3:
@@ -907,7 +907,7 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		if (value == 0x0123){
 			comscreen(Disp_Indexpic[0],Number_IndexpicB);
 			cy_println ("Software Reset...");
-			run_command ("reset");	
+			run_command ("reset", 1);	
 		}
 		break;
 	case ADDR_MODE:

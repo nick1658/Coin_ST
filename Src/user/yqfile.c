@@ -14,11 +14,12 @@
 /*************
 	PRINTER  打印 
 ***************/
+#define Uart1_Printf(x, arg...)
 #define PINTNUM 60
 uint8_t dgus_readt[6]= {0xA5,0x5A,0x03,0x81,0x20, 0x10};  // only need y-m-d w h:m:s  读时间
 void print_func(void)     // 打印 
 {
-	uart1_init();
+//	uart1_init();
 	Uart1_Printf("\r\n");
 	//Uart1_Printf("\r\n");
 	//Uart1_Printf("\r\n");

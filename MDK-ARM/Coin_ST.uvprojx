@@ -335,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;                 ../Drivers/STM32F4xx_HAL_Driver/Inc;                 ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                 ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                 ../Middlewares/Third_Party/FreeRTOS/Source/include;                 ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                 ../Drivers/CMSIS/Include;                 ..\Src\user</IncludePath>
+              <IncludePath>../Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Drivers/CMSIS/Include;..\Src\user;..\Src\driver</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -678,6 +678,16 @@
               <FileName>yqsqlite3.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\user\yqsqlite3.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>MyDrvier</GroupName>
+          <Files>
+            <File>
+              <FileName>NAND.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\driver\NAND.c</FilePath>
             </File>
           </Files>
         </Group>

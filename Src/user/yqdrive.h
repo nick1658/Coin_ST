@@ -14,14 +14,14 @@
 //////////////////////////
 
 	
-#define OUT7(x)		(rGPGDAT = (rGPGDAT & (~0x8)) |(x<<3))	//EINT11/GPG3
-#define OUT6(x) 	(rGPBDAT = (rGPBDAT & (~0x2)) |(x<<1))	 	//TOUT1/GPB1
-#define OUT5(x) 	(rGPBDAT = (rGPBDAT & (~0x1)) |(x))	 	//TOUT0/GPB0
-#define OUT4(x) 	(rGPHDAT = (rGPHDAT & (~0x2000)) |(x<<13))	//CLKOUT0/GPH13	
-#define OUT3(x) 	(rGPHDAT = (rGPHDAT & (~0x4000)) |(x<<14))	//CLKOUT1/GPH14	
-#define OUT2(x) 	(rGPGDAT = (rGPGDAT & (~0x80)) |(x<<7))	//EINT15/GPG7 
-#define OUT1(x) 	(rGPFDAT = (rGPFDAT & (~0x2)) |(x<<1))	//EINT1/GPF1/sd0_CDN
-#define OUT0(x) 	(rGPEDAT = (rGPEDAT & (~0x20)) |(x<<5))	//SD0_CLK/GPE5
+#define OUT7(x)		//(rGPGDAT = (rGPGDAT & (~0x8)) |(x<<3))	//EINT11/GPG3
+#define OUT6(x) 	//(rGPBDAT = (rGPBDAT & (~0x2)) |(x<<1))	 	//TOUT1/GPB1
+#define OUT5(x) 	//(rGPBDAT = (rGPBDAT & (~0x1)) |(x))	 	//TOUT0/GPB0
+#define OUT4(x) 	//(rGPHDAT = (rGPHDAT & (~0x2000)) |(x<<13))	//CLKOUT0/GPH13	
+#define OUT3(x) 	//(rGPHDAT = (rGPHDAT & (~0x4000)) |(x<<14))	//CLKOUT1/GPH14	
+#define OUT2(x) 	//(rGPGDAT = (rGPGDAT & (~0x80)) |(x<<7))	//EINT15/GPG7 
+#define OUT1(x) 	//(rGPFDAT = (rGPFDAT & (~0x2)) |(x<<1))	//EINT1/GPF1/sd0_CDN
+#define OUT0(x) 	//(rGPEDAT = (rGPEDAT & (~0x20)) |(x<<5))	//SD0_CLK/GPE5
 				  
 #define  PAN_MOTOR_LEFT(x) 	 OUT7(x)			//P2^0; 	//EINT11/GPG3 //  转盘反转
 #define  PAN_MOTOR_RIGHT(x)  OUT6(x)			//P2^1; TOUT1/GPB1  //  转盘正转 PAN_MOTOR_RIGHT(x)
@@ -67,6 +67,7 @@
 #define A0IN1 	((rGPGDAT & 0x20)>>5)	//EINT13/GPG5
 #define A0IN0 	((rGPGDAT & 0x10)>>4)	//EINT12/GPG4
 
+#define _MY_DEBUG_NO_DOOR_CHECK_
 
 #ifdef _MY_DEBUG_NO_DOOR_CHECK_
 	#define COIN_DETECT      1	//P0^0;  //转盘槽型传感器       EINT12/GPG4  	

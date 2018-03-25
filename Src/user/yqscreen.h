@@ -15,7 +15,7 @@ void touchget_from_uart2(void);     //receive the touch from dgus at real time
 #define TIMEBP1 50     //beep time  for  kai ji
 #define TIMEBP2 100     //beep time  for  alert
 void dgus_tfbeep(int bztime); 			 	 //uart1,dgus deep control
-void dgus_chinese(uint16_t addr,int8_t str[],uint16_t strnum);    // dgus  chinese
+void dgus_chinese(uint16_t addr,uint8_t str[],uint16_t strnum);    // dgus  chinese
 void dgus_tf2word(int addr,long name);  	  //transfer 2word data variables to specify address 
 void dgus_tf1word(int addr,long data);  	  //transfer 1word data variables to specify address 
 void disp_KJAmount(void); // initial addr on zhu jiemian ze zs forge
@@ -140,8 +140,8 @@ void counter_clear (void); //
 #define ALERT_MSG(TIPS,MSG) { \
 	dgus_tfbeep(TIMEBP2); \
 	prepic_prenum = prepic_num; \
-	dgus_chinese(0x400, TIPS, strlen(TIPS)); \
-	dgus_chinese(0x416, MSG, strlen(MSG)); \
+	dgus_chinese(0x400, TIPS, strlen((char *)TIPS)); \
+	dgus_chinese(0x416, MSG, strlen((char *)MSG)); \
 	comscreen(Disp_Indexpic[BJJM],Number_IndexpicB); \
 }
 
