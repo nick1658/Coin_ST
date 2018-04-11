@@ -2,16 +2,406 @@
 #include "user_app.h"
 //#include "s3c2416.h"
 
+#define SET_CLE HAL_GPIO_WritePin(GPIOD, Nand_CLE_Pin, GPIO_PIN_SET)
+#define CLR_CLE HAL_GPIO_WritePin(GPIOD, Nand_CLE_Pin, GPIO_PIN_RESET)
+#define SET_ALE HAL_GPIO_WritePin(GPIOC, Nand_ALE_Pin, GPIO_PIN_SET)
+#define CLR_ALE HAL_GPIO_WritePin(GPIOC, Nand_ALE_Pin, GPIO_PIN_RESET)
+#define SET_CE HAL_GPIO_WritePin(GPIOD, Nand_CE_Pin, GPIO_PIN_SET)
+#define CLR_CE HAL_GPIO_WritePin(GPIOD, Nand_CE_Pin, GPIO_PIN_RESET)
+#define SET_WE HAL_GPIO_WritePin(GPIOC, Nand_WE_Pin, GPIO_PIN_SET)
+#define CLR_WE HAL_GPIO_WritePin(GPIOC, Nand_WE_Pin, GPIO_PIN_RESET)
+#define SET_RE HAL_GPIO_WritePin(GPIOD, Nand_RE_Pin, GPIO_PIN_SET)
+#define CLR_RE HAL_GPIO_WritePin(GPIOD, Nand_RE_Pin, GPIO_PIN_RESET)
 
+/********************
+  延时函数
+  形参：uint8_t time
+  功能：延时数值为time值
 
-void delay_us(unsigned int t)
+*********************/
+void delay_us(uint32_t time)
 {
-	volatile int i;
-	while (t--) {
-		for (i=0 ; i<9 ; i++)
-			;
-	}
+	uint32_t c;
+	for(c=time;c;c--){ //定时=time*3*333.6=time*1000.8ns    
+   //for(b=2;b;b--); //8*13.9*3= 333.6     
+  }
 }
+/*等待芯片不忙*/
+void wait_NAND_readay()
+{
+	uint8_t wait=0;//忙闲信号
+//等待芯片不忙
+	do
+	{
+		wait = HAL_GPIO_ReadPin(Nand_RB_GPIO_Port, Nand_RB_Pin);//读取忙闲引脚
+	}
+	while(0x00==wait);
+}
+
+void setNandDataInput (void)
+{  
+  GPIO_InitTypeDef GPIO_InitStruct;
+  /*Configure GPIO pins : PEPin PEPin PEPin PEPin 
+                           PEPin PEPin PEPin */
+  GPIO_InitStruct.Pin = Nand_D2_Pin|Nand_D3_Pin|Nand_D7_Pin|Nand_D6_Pin 
+                          |Nand_D5_Pin|Nand_D0_Pin|Nand_D1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = Nand_D4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(Nand_D4_GPIO_Port, &GPIO_InitStruct);
+}
+void setNandDataOutput(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct;
+	HAL_GPIO_WritePin(GPIOC, Nand_WP_Pin, GPIO_PIN_SET);
+  /*Configure GPIO pins : PEPin PEPin PEPin PEPin 
+                           PEPin PEPin PEPin */
+  GPIO_InitStruct.Pin = Nand_D2_Pin|Nand_D3_Pin|Nand_D7_Pin|Nand_D6_Pin 
+                          |Nand_D5_Pin|Nand_D0_Pin|Nand_D1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = Nand_D4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(Nand_D4_GPIO_Port, &GPIO_InitStruct);
+}
+
+void nandWriteDataToPort(uint8_t data)
+{
+	HAL_GPIO_WritePin (GPIOE, Nand_D7_Pin, ((data & (1 << 7)) == 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+	HAL_GPIO_WritePin (GPIOE, Nand_D6_Pin, ((data & (1 << 6)) == 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+	HAL_GPIO_WritePin (GPIOE, Nand_D5_Pin, ((data & (1 << 5)) == 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+	HAL_GPIO_WritePin (Nand_D4_GPIO_Port, Nand_D4_Pin, ((data & (1 << 4)) == 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+	HAL_GPIO_WritePin (GPIOE, Nand_D3_Pin, ((data & (1 << 3)) == 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+	HAL_GPIO_WritePin (GPIOE, Nand_D2_Pin, ((data & (1 << 2)) == 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+	HAL_GPIO_WritePin (GPIOE, Nand_D1_Pin, ((data & (1 << 1)) == 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+	HAL_GPIO_WritePin (GPIOE, Nand_D0_Pin, ((data & (1 << 0)) == 0) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+}
+uint8_t nandReadDataFromPort (void)
+{
+	uint8_t data_t = 0;
+	data_t = ((HAL_GPIO_ReadPin (GPIOE, Nand_D7_Pin) << 7) |
+						(HAL_GPIO_ReadPin (GPIOE, Nand_D6_Pin) << 6) |
+						(HAL_GPIO_ReadPin (GPIOE, Nand_D5_Pin) << 5) |
+						(HAL_GPIO_ReadPin (Nand_D4_GPIO_Port, Nand_D4_Pin) << 4) |
+						(HAL_GPIO_ReadPin (GPIOE, Nand_D3_Pin) << 3) |
+						(HAL_GPIO_ReadPin (GPIOE, Nand_D2_Pin) << 2) |
+						(HAL_GPIO_ReadPin (GPIOE, Nand_D1_Pin) << 1) |
+						(HAL_GPIO_ReadPin (GPIOE, Nand_D0_Pin) << 0)
+				);
+	return data_t;
+}
+
+/*读取NAND闪存的ID序列号串口发送*/
+void readNandId(void)
+{
+	uint8_t a=0, b=0, c=0, d=0;
+	
+	setNandDataOutput ();
+  CLR_CE;//开启片选
+
+  SET_CLE;//命令锁存开启
+  CLR_WE;//写使能
+  CLR_ALE;//地址锁存关闭
+  SET_RE;//读关闭
+ // GPIO_Write(GPIOE, 0x90); //读ID命令
+ nandWriteDataToPort (0x90);
+  SET_WE;//关闭写
+
+  CLR_CLE;
+  SET_ALE;
+  CLR_WE;
+//  GPIO_Write(GPIOE, 0x00); //地址00
+ nandWriteDataToPort (0x00);
+  SET_WE;
+
+  /*设置PE口得低八位为输入*/
+	setNandDataInput ();
+
+  CLR_ALE; //注意啊，这里一定把他放在下面应为是有时间要求的；时序图TAR=15纳秒之后才是RE的操作；
+	//读出的结果是AD F1 80 1D ，2011年8月26日，与天津第四项目部宿舍
+	//AD F1,不用关心，80 1D代表本闪存为8位组织结构，页面大小为2KB，快大小为128KB，备用区为每512字节有16字节
+  CLR_RE;
+
+	a=nandReadDataFromPort ();//(GPIOE->IDR);//读出数据
+  SET_RE;
+
+	CLR_RE;
+  b=nandReadDataFromPort ();//(GPIOE->IDR);
+  SET_RE;
+
+	CLR_RE;
+	c=nandReadDataFromPort ();//(GPIOE->IDR);
+	SET_RE;
+
+  CLR_RE;
+	d=nandReadDataFromPort ();//(GPIOE->IDR);//delay_1us(1);
+	SET_RE;
+
+  SET_CE;//关闭片选
+
+	cy_println ("NandFlash ID: %02x %02x %02x %02x", a, b, c, d);
+}
+
+/*读闪存一页*/
+void read_NAND_PAGE(void)
+{
+	uint32_t n;
+	uint8_t sd;
+
+/*设置PE口得低八位为输出*/
+	setNandDataOutput ();
+	
+	SET_WE;
+	SET_RE;
+	CLR_ALE;
+	CLR_CLE;
+
+	CLR_CE;//片选开启
+	SET_CLE;
+	CLR_ALE;
+	SET_RE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //  读命令
+	nandWriteDataToPort (0x00);
+	SET_WE;
+	CLR_CLE;
+	SET_ALE;
+	SET_RE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //页地址
+	nandWriteDataToPort (0x00);
+	SET_WE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00);//页地址
+	nandWriteDataToPort (0x00);
+	SET_WE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //快地址
+	nandWriteDataToPort (0x00);
+	SET_WE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00);//快地址
+	nandWriteDataToPort (0x00);
+//	SET_WE;
+//	CLR_WE;
+//	//GPIO_Write(GPIOE, 0x00);//快地址
+//	nandWriteDataToPort (0x00);
+	SET_WE;
+
+	CLR_ALE;
+	SET_CLE;
+	SET_RE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x30); //开始读出命令
+	nandWriteDataToPort (0x30);
+	SET_WE;
+	CLR_CLE;
+	//GPIOE->CRL=0x88888888; //接口转换
+	setNandDataInput ();
+	//for(n=30;n;n--);//满足时序
+	//delay_1us(20); //等待
+	wait_NAND_readay();
+	for(n=0;n < 2112; n++){
+		CLR_RE;
+		sd=nandReadDataFromPort ();//读出数据
+		SET_RE;
+		if (n < 3000){
+			if (n % 16 == 0){
+				cy_println ();
+			}
+			cy_print("%02x, ", sd);//发送到计算机
+		}
+	}
+
+	SET_CE;
+	SET_WE;
+	SET_RE;
+	CLR_ALE;
+	CLR_CLE;
+	cy_println();
+}
+
+/*写闪存的一页，数据=2112字节=2kb*/
+void write_NAND_PAGE(void)
+{
+   uint8_t send_date=0;
+   uint32_t numb;
+   /*设置PE口得低八位为输出*/
+	setNandDataOutput ();
+	
+	SET_WE;
+	SET_RE;
+	CLR_ALE;
+	CLR_CLE;
+
+	CLR_CE;//片选开启
+	SET_CLE;//命令
+	CLR_ALE;
+	SET_WE;
+	SET_RE;
+
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x80); //写一页命令
+	nandWriteDataToPort (0x80);
+	SET_WE;
+	CLR_CLE;//释放命令总线
+
+
+	SET_ALE;//地址写入允许
+	
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //页地址0
+	nandWriteDataToPort (0x00);
+	SET_WE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //页地址
+	nandWriteDataToPort (0x00);
+	SET_WE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //快递至
+	nandWriteDataToPort (0x00);
+	SET_WE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //快递至
+	nandWriteDataToPort (0x00);
+//	SET_WE;
+//	CLR_WE;
+//	//GPIO_Write(GPIOE, 0x00); //快递至
+//	nandWriteDataToPort (0x00);
+	SET_WE;
+	
+	CLR_ALE;//释放地址总线
+
+	for(numb=5;numb;numb--);//延时
+	for(numb=2112;numb;numb--)
+	{
+		CLR_WE;
+		//GPIO_Write(GPIOE, 0x89);  //写入数据89
+		nandWriteDataToPort (0x5A);
+		SET_WE;
+	}
+	SET_CLE;//开启命令总线
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x10);//页编程
+	nandWriteDataToPort (0x10);
+	SET_WE;
+	//for(numb=3;numb;numb--);//略微延时
+	wait_NAND_readay();
+	//delay_1us(500);
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x70);//状态读 //这个状态要为E0才表示操作完成可以进行下一步操作
+	nandWriteDataToPort (0x70);
+	SET_WE;
+	//GPIOE->CRL=0x88888888;
+	setNandDataInput ();
+	SET_WE;
+	SET_RE;
+	CLR_RE;
+	send_date=nandReadDataFromPort ();//读出数据
+	SET_CE;
+	SET_WE;
+	SET_RE;
+	CLR_ALE;
+	CLR_CLE;
+	cy_println ("send-data: %0x", send_date);
+}
+
+/*擦除一个块*/
+void erase_NAND_BLOK(void)
+{ 
+	uint8_t e;
+
+/*设置PE口得低八位为输出*/
+	setNandDataOutput ();
+
+
+	SET_WE;
+	SET_RE;
+	CLR_ALE;  //初始化
+	CLR_CLE;
+
+	CLR_CE;
+	SET_CLE;
+	CLR_ALE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x60); //命令
+	nandWriteDataToPort (0x60);
+	SET_WE;
+	CLR_CLE;
+	SET_ALE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //快地址0
+	nandWriteDataToPort (0x00);
+	SET_WE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x00); //块地址1
+	nandWriteDataToPort (0x00);
+//	SET_WE;
+//	CLR_WE;
+//	//GPIO_Write(GPIOE, 0x00); //块地址1
+//	nandWriteDataToPort (0x00);
+	SET_WE;
+	
+	CLR_ALE;
+	SET_CLE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0xd0); //开始擦除
+	nandWriteDataToPort (0xd0);
+	SET_WE;
+	CLR_CLE;
+	//for(m=5;m;m--);//延时满足时序
+	wait_NAND_readay();
+	//delay_1us(3000); //等待擦完
+	SET_CLE;
+	CLR_WE;
+	//GPIO_Write(GPIOE, 0x70); // 读状态码状态读 //这个状态要为E0才表示操作完成可以进行下一步操作
+	nandWriteDataToPort (0x70);
+	SET_WE;
+	CLR_CLE;
+	//GPIOE->CRL=0x88888888; //数据口转换成输入
+	setNandDataInput ();
+	CLR_RE;
+	//e=(GPIOE->IDR);//读出数据
+	e=nandReadDataFromPort ();//读出数据
+	SET_RE;
+	//my_send_byte(e);  //穿行发送
+	cy_println ("send-data: %0x", e);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//void delay_us(unsigned int t)
+//{
+//	volatile int i;
+//	while (t--) {
+//		for (i=0 ; i<9 ; i++)
+//			;
+//	}
+//}
 void delay_ms1(unsigned int t)
 {
 	volatile int i;
@@ -20,6 +410,8 @@ void delay_ms1(unsigned int t)
 			;
 	}
 }
+
+
 
 
 void rNF_Reset()

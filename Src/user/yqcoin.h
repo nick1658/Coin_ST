@@ -49,27 +49,29 @@ void detect_read(void);
 报错宏定义    函数
 *****************/
 
-#define SWITCHERROR 11      //门没有关上
+#define SWITCHERROR 11      
 #define COINNGKICKERROR 12
-#define DETECTERROR 13     // 币斗满 
-#define KICKCOINFULL 14     //转盘赌币
+#define DETECTERROR 13     
+#define KICKCOINFULL 14     
 #define KICK1COINERROR 15
 #define KICK2COINERROR 16
-#define PRESSMLOCKED  17      //压币带堵币
-#define COUNT_FINISHED 18  	// 1 MCU接到 有清分斗满币 停止	
+#define PRESSMLOCKED  17      
+#define COUNT_FINISHED 18  	
 #define ADSTDEEROR    20       //表示传感器下有币
 #define RTCREEROR    21       //表示READ time wrong
 #define READOUTDATA    22       // 读出  数据  内存满
 #define COMPLETE_UPDATE 30
+#define STORAGE_MOTOR_ERROR 31
 
 
 
 extern  uint16_t prepic_prenum;      // 用于记录 报错前的界面 
 void alertfuc(uint16_t alertflag); //报错
 
+void coin_time_period_1ms (void);
 
 
-
-
+extern void coin_init (void);
+extern void normalTask (void);
 
 #endif

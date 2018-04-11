@@ -8,6 +8,7 @@
 #include <ctype.h>
 
 #include "usart.h"
+#include "spi.h"
 
 #include "yqadc.h"
 #include "yqcoin.h"
@@ -18,6 +19,7 @@
 #include "my_cmd.h"
 #include "coin_config.h"
 #include "NAND.h"
+#include "fm25w256.h"
 
 
 #define TRUE 	1   
@@ -30,7 +32,7 @@
 	
 #ifdef UART_DEBUG
 #define dbg_ln(format, arg...) printf("\r\nDEBUG: " format "\nNick-Cmd:", ## arg)
-#define dbg(format, arg...) printf("DEBUG: " format "", ## arg)
+#define dbg(format, arg...) printf("DEBUG: " format "\r\n", ## arg)
 #define dbg_null(format, arg...) printf("" format "", ## arg)
 #else
 #define dbg_ln(format, arg...) 

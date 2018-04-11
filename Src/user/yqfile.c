@@ -27,13 +27,13 @@ void print_func(void)     // 打印
 	if(coinchoose == CN0){    //中文
 		while(1){     // read time 
 			comscreen(dgus_readt,6);	//read time
-			while(touch_flag ==0){;}
-			if (touchnum[7]>0){
-				Uart1_Printf(" 日期:20%02x-%02x-%02x %02x:%02x\r\n",touchnum[6],touchnum[7],touchnum[8],touchnum[10],touchnum[11]);
-				touch_flag = 0;
+			while(touchScreenDataFlag ==0){;}
+			if (touchScreenDataBuffer[7]>0){
+				Uart1_Printf(" 日期:20%02x-%02x-%02x %02x:%02x\r\n",touchScreenDataBuffer[6],touchScreenDataBuffer[7],touchScreenDataBuffer[8],touchScreenDataBuffer[10],touchScreenDataBuffer[11]);
+				touchScreenDataFlag = 0;
 				break;
 			}else{
-				touch_flag = 0;
+				touchScreenDataFlag = 0;
 			}
 		}
 		if (para_set_value.data.system_mode == 1){//清分模式
@@ -83,16 +83,16 @@ void print_func(void)     // 打印
 		while(1)     // read time 
 		{
 			comscreen(dgus_readt,6);	//read time
-			while(touch_flag ==0){;}
-			if (touchnum[7]>0)
+			while(touchScreenDataFlag ==0){;}
+			if (touchScreenDataBuffer[7]>0)
 			{
-				Uart1_Printf("DATE:20%02x-%02x-%02x %02x:%02x\r\n",touchnum[6],touchnum[7],touchnum[8],touchnum[10],touchnum[11]);
-				touch_flag = 0;
+				Uart1_Printf("DATE:20%02x-%02x-%02x %02x:%02x\r\n",touchScreenDataBuffer[6],touchScreenDataBuffer[7],touchScreenDataBuffer[8],touchScreenDataBuffer[10],touchScreenDataBuffer[11]);
+				touchScreenDataFlag = 0;
 				break;
 			}
 			else
 			{
-				touch_flag = 0;
+				touchScreenDataFlag = 0;
 			}
 		}
 //		Uart1_Printf("Worker: %d\r\n",gh_now);
@@ -121,16 +121,16 @@ void print_func(void)     // 打印
 		while(1)     // read time 
 		{
 			comscreen(dgus_readt,6);	//read time
-			while(touch_flag ==0){;}
-			if (touchnum[7]>0)
+			while(touchScreenDataFlag ==0){;}
+			if (touchScreenDataBuffer[7]>0)
 			{
-				Uart1_Printf("DATE:20%02x-%02x-%02x %02x:%02x\r\n",touchnum[6],touchnum[7],touchnum[8],touchnum[10],touchnum[11]);
-				touch_flag = 0;
+				Uart1_Printf("DATE:20%02x-%02x-%02x %02x:%02x\r\n",touchScreenDataBuffer[6],touchScreenDataBuffer[7],touchScreenDataBuffer[8],touchScreenDataBuffer[10],touchScreenDataBuffer[11]);
+				touchScreenDataFlag = 0;
 				break;
 			}
 			else
 			{
-				touch_flag = 0;
+				touchScreenDataFlag = 0;
 			}
 		}
 //		Uart1_Printf("Worker: %d\n",gh_now);
@@ -157,16 +157,16 @@ void print_func(void)     // 打印
 		while(1)     // read time 
 		{
 			comscreen(dgus_readt,6);	//read time
-			while(touch_flag ==0){;}
-			if (touchnum[7]>0)
+			while(touchScreenDataFlag ==0){;}
+			if (touchScreenDataBuffer[7]>0)
 			{
-				Uart1_Printf("DATE:20%02x-%02x-%02x %02x:%02x\r\n",touchnum[6],touchnum[7],touchnum[8],touchnum[10],touchnum[11]);
-				touch_flag = 0;
+				Uart1_Printf("DATE:20%02x-%02x-%02x %02x:%02x\r\n",touchScreenDataBuffer[6],touchScreenDataBuffer[7],touchScreenDataBuffer[8],touchScreenDataBuffer[10],touchScreenDataBuffer[11]);
+				touchScreenDataFlag = 0;
 				break;
 			}
 			else
 			{
-				touch_flag = 0;
+				touchScreenDataFlag = 0;
 			}
 		}
 		//Uart1_Printf("Worker: %d\r\n",gh_now);

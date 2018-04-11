@@ -6,8 +6,8 @@
 
 
 void comscreen(uint8_t* str,short int length);  //·¢ËÍ Ö¸ÁîÖÁÒº¾§ÆÁ
-extern volatile uint16_t touch_flag;
-extern volatile uint16_t uartcount;  // ´®¿Ú2½ÓÊÕ ×Ö½Ú ¼ÆÊı
+extern uint16_t touchScreenDataFlag;
+extern uint16_t touchScreenDataCount;  // ´®¿Ú2½ÓÊÕ ×Ö½Ú ¼ÆÊı
 
 void touchget_from_uart0(void);     //receive the touch from dgus at real time 
 void touchget_from_uart2(void);     //receive the touch from dgus at real time 
@@ -63,7 +63,7 @@ void counter_clear (void); //
 #define	ADDR_YZS5	0x0033  //  Êı¾İ±äÁ¿ÏÔÊ¾ ,  Ô¤ÖÃ, data variable
 #define	ADDR_YZS6	0x0035  //  Êı¾İ±äÁ¿ÏÔÊ¾ ,  Ô¤ÖÃ, data variable
 #define	ADDR_YZS7	0x0037  //  Êı¾İ±äÁ¿ÏÔÊ¾ ,  Ô¤ÖÃ, data variable
-#define	ADDR_YZint8_t	0x0039  //  Êı¾İ±äÁ¿ÏÔÊ¾ ,  Ô¤ÖÃ, data variable
+#define	ADDR_YZS8	0x0039  //  Êı¾İ±äÁ¿ÏÔÊ¾ ,  Ô¤ÖÃ, data variable
 
 //¼ÍÄî±Ò
 #define	ADDR_YZS9	0x0539  //  Êı¾İ±äÁ¿ÏÔÊ¾ ,  Ô¤ÖÃ10, data variable
@@ -182,8 +182,8 @@ extern uint8_t Disp_Indexpic[Number_IndexpicA][Number_IndexpicB];         //MCU¿
 extern volatile uint16_t prepic_num; 	//¼ÇÂ¼µ±Ç°µÄ Í¼Æ¬ºÅ ËùÏÔÊ¾µÄ
 int16_t test_repete(void);   
 
-#define TSGET_NUM 32 //´¥ÃşÆÁÊı¾İÖ¡×î´ó³¤¶È
-extern volatile uint8_t touchnum[TSGET_NUM];
+#define TOUCH_SCREEN_DATA_BUF_LEN 32 //´¥ÃşÆÁÊı¾İÖ¡×î´ó³¤¶È
+extern uint8_t touchScreenDataBuffer[TOUCH_SCREEN_DATA_BUF_LEN];
 extern volatile int32_t db_id;   //ÀúÊ·Êı¾İ ±í¸ñÒÑ¾­ÏÔÊ¾ Êı
 void touchresult(void); 	 //manage the instruct from dgus
 void  disp_allcount(void);	  // È¡³ö½çÃæ ÏÔÊ¾	 µ±Ç°¼ÆÊı  Ïêµ¥
@@ -209,6 +209,17 @@ struct precoin_num 	 //ÓÃÓÚ   Ô¤ÖÃ¼ÆÊı
 	uint32_t coinval; //¾íÊı
 	uint32_t full_flag;
 };
+
+typedef struct RTC_Time {
+	unsigned short Year; 
+	unsigned char Month;
+	unsigned char Day;
+	unsigned char Week;
+	unsigned char Hour;
+	unsigned char Min;
+	unsigned char Sec;
+} RTC_Time;	
+
 extern struct precoin_num count_coin_temp[11];   //ÓÃÓÚ   Ô¤ÖÃ¼ÆÊı	 
 
 extern struct disp_count_buf disp_buf;

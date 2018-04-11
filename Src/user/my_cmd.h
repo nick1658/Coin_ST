@@ -117,6 +117,7 @@ typedef struct
 	uint32_t coin_speed;
 	int16_t sys_break;
 	int16_t ad_rd;
+	uint16_t motor_pwm;
 }s_system_env;
 
 extern s_system_env sys_env;

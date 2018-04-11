@@ -63,7 +63,7 @@ typedef struct
 #define ADOFFSET  40
 
 
-#define ADSAMPNUM0  16    //every ad channel sample number for getting average value 2  8 
+#define ADSAMPNUM  16    //every ad channel sample number for getting average value 2  8 
 
 #define  WAVE_DOWN_TO_STD_N  32   //1  //8确认波形下降 次数  4
 #define  WAVE_GO_UP_N  32 //1  //8 15   //确认波形峰值  次数 50 40   65     20
@@ -79,7 +79,7 @@ typedef struct
 #define AD0STDSET 900    //高频
 #define AD1STDSET 900	 //中频
 #define AD2STDSET 900	 //低频
-#define ADADJACTERTIME 50
+#define ADADJACTERTIME (50*20)
 
 
 extern  uint16_t ad0_min;     //贮存每枚硬币过去后的 最大值
@@ -87,7 +87,7 @@ extern  uint16_t ad1_min;     //贮存每枚硬币过去后的 最大值
 extern  uint16_t ad2_min;     //贮存每枚硬币过去后的 最大值
 
 extern volatile uint16_t blockflag;      //堵币标志变量
-extern volatile uint32_t adtime;
+extern uint32_t adtime;
 
 extern uint32_t ch0_count;  //通道0 通过的硬币计数 
 
@@ -105,7 +105,7 @@ void ad0_valueget(void);  //adc function   get value
 
 
 extern  int temperstd;   //20度  20*10 +600  = 800MV;  800/3300 *1024 = 248.24  // 传感器输出电压公式 VO = (10mV/C * T) + 600
-uint16_t adstd_test(void);   //只有在电压值在标准状态时才可以启动所有的电机与AD转换  本程序值控制在 1010左右吧
+
 uint16_t adstd_sample(void);    //基准值调试  
 uint16_t cy_adstd_adj (void);
 void print_std_value(void);
@@ -134,18 +134,18 @@ extern  s_coin_compare_value coin_cmp_value[COIN_TYPE_NUM];
 
 /////////////////////////////////
 #define AD_BUF_GROUP_LEN 2
-#define DATA_BUF_LENGTH	1024
+#define DATA_BUF_LENGTH	2048
 #define ADJ_BUF_LENGTH 512
 #define NG_BUF_LENGTH	512
 #define GOOD_BUF_LENGTH	512
-extern AD_Value AD_Value_buf[DATA_BUF_LENGTH];
+//extern AD_Value AD_Value_buf[DATA_BUF_LENGTH];
 
 extern AD_Value Detect_AD_Value_buf[AD_BUF_GROUP_LEN][DATA_BUF_LENGTH];
 extern AD_Value *Detect_AD_Value_buf_p;
 
 
-extern volatile AD_Value NG_value_buf[NG_BUF_LENGTH];//异币采样数据缓冲区
-extern volatile AD_Value GOOD_value_buf[GOOD_BUF_LENGTH];//异币采样数据缓冲区
+extern AD_Value NG_value_buf[NG_BUF_LENGTH];//异币采样数据缓冲区
+extern AD_Value GOOD_value_buf[GOOD_BUF_LENGTH];//真币采样数据缓冲区
 extern volatile uint32_t ng_value_index;
 extern volatile uint32_t good_value_index;
 

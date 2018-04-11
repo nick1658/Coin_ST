@@ -27,6 +27,7 @@ extern int8_t alertflag;  //报错标志位
 extern uint8_t coinchoose;    // 币种选择
 void yqi2c_init(void);   //硬币清分机 I2C初始化 
 extern uint8_t dgus_readt[6];  // only need y-m-d h:m  读时间
+extern uint8_t dgus_beep[6];  // only need y-m-d h:m  读时间
 void print_func(void);   //打印 函数 
 
 

@@ -61,6 +61,18 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define Nand_D2_Pin GPIO_PIN_2
+#define Nand_D2_GPIO_Port GPIOE
+#define Nand_D3_Pin GPIO_PIN_3
+#define Nand_D3_GPIO_Port GPIOE
+#define Nand_D7_Pin GPIO_PIN_4
+#define Nand_D7_GPIO_Port GPIOE
+#define Nand_D6_Pin GPIO_PIN_5
+#define Nand_D6_GPIO_Port GPIOE
+#define Nand_D5_Pin GPIO_PIN_6
+#define Nand_D5_GPIO_Port GPIOE
+#define Nand_D4_Pin GPIO_PIN_13
+#define Nand_D4_GPIO_Port GPIOC
 #define User_Led_Pin GPIO_PIN_14
 #define User_Led_GPIO_Port GPIOC
 #define ADC_IN2_Pin GPIO_PIN_4
@@ -71,20 +83,28 @@
 #define ADC_IN0_GPIO_Port GPIOA
 #define IN7_Pin GPIO_PIN_8
 #define IN7_GPIO_Port GPIOE
+#define IN7_EXTI_IRQn EXTI9_5_IRQn
 #define IN6_Pin GPIO_PIN_9
 #define IN6_GPIO_Port GPIOE
+#define IN6_EXTI_IRQn EXTI9_5_IRQn
 #define IN5_Pin GPIO_PIN_10
 #define IN5_GPIO_Port GPIOE
+#define IN5_EXTI_IRQn EXTI15_10_IRQn
 #define IN4_Pin GPIO_PIN_11
 #define IN4_GPIO_Port GPIOE
+#define IN4_EXTI_IRQn EXTI15_10_IRQn
 #define IN3_Pin GPIO_PIN_12
 #define IN3_GPIO_Port GPIOE
+#define IN3_EXTI_IRQn EXTI15_10_IRQn
 #define IN2_Pin GPIO_PIN_13
 #define IN2_GPIO_Port GPIOE
+#define IN2_EXTI_IRQn EXTI15_10_IRQn
 #define IN1_Pin GPIO_PIN_14
 #define IN1_GPIO_Port GPIOE
+#define IN1_EXTI_IRQn EXTI15_10_IRQn
 #define IN0_Pin GPIO_PIN_15
 #define IN0_GPIO_Port GPIOE
+#define IN0_EXTI_IRQn EXTI15_10_IRQn
 #define OUT7_Pin GPIO_PIN_10
 #define OUT7_GPIO_Port GPIOB
 #define OUT6_Pin GPIO_PIN_14
@@ -101,12 +121,36 @@
 #define OUT1_GPIO_Port GPIOC
 #define OUT0_Pin GPIO_PIN_7
 #define OUT0_GPIO_Port GPIOC
+#define LAN8720_RST_Pin GPIO_PIN_8
+#define LAN8720_RST_GPIO_Port GPIOA
 #define Uart1TX_Pin GPIO_PIN_9
 #define Uart1TX_GPIO_Port GPIOA
 #define Uart1RX_Pin GPIO_PIN_10
 #define Uart1RX_GPIO_Port GPIOA
+#define Nand_WP_Pin GPIO_PIN_10
+#define Nand_WP_GPIO_Port GPIOC
+#define Nand_WE_Pin GPIO_PIN_11
+#define Nand_WE_GPIO_Port GPIOC
+#define Nand_ALE_Pin GPIO_PIN_12
+#define Nand_ALE_GPIO_Port GPIOC
+#define Nand_CLE_Pin GPIO_PIN_0
+#define Nand_CLE_GPIO_Port GPIOD
+#define Nand_CE_Pin GPIO_PIN_1
+#define Nand_CE_GPIO_Port GPIOD
+#define Nand_RE_Pin GPIO_PIN_2
+#define Nand_RE_GPIO_Port GPIOD
+#define Nand_RB_Pin GPIO_PIN_3
+#define Nand_RB_GPIO_Port GPIOD
 #define SPI2_CS_Pin GPIO_PIN_7
 #define SPI2_CS_GPIO_Port GPIOD
+#define SPI1_CS_Pin GPIO_PIN_8
+#define SPI1_CS_GPIO_Port GPIOB
+#define SPI1_WP_Pin GPIO_PIN_9
+#define SPI1_WP_GPIO_Port GPIOB
+#define Nand_D0_Pin GPIO_PIN_0
+#define Nand_D0_GPIO_Port GPIOE
+#define Nand_D1_Pin GPIO_PIN_1
+#define Nand_D1_GPIO_Port GPIOE
 
 /* ########################## Assert Selection ############################## */
 /**

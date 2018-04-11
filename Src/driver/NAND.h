@@ -110,6 +110,12 @@ extern unsigned char WriteCodeToNand(void);
 unsigned char WriteAppToNand(unsigned int CodeAddr, unsigned int CodeSize);
 unsigned char WriteAppToAppSpace(unsigned int CodeAddr, unsigned int CodeSize);
 ////////////////////////////////////////////////////////////////
+void wait_NAND_readay(void);
+void readNandId(void);
+void read_NAND_PAGE(void);
+void write_NAND_PAGE(void) ;
+void erase_NAND_BLOK(void);
+////////////////////////////////////////////////////////////////
 
 #define NF_NFCE0		(0x1<<1)
 #define CMD_READ			0x00	//  Read

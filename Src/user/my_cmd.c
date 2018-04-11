@@ -1,4 +1,4 @@
-
+#include "FreeRTOS.h"
 #include "main.h"
 #include  "user_app.h"
 
@@ -152,13 +152,13 @@ void fill_rec_buf(uint8_t data)
 }                                                                                      
  
 
-
+extern void taskStatus(void );
 int do_task_manager (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
 	int test1, test2, test3;
 	switch (argc) {
 	case 1 :
-		cy_println ("no arg");
+		taskStatus ();
 		break;
 	case 2 :
 		test1 = simple_strtol (argv[1], NULL, 16);
@@ -200,6 +200,250 @@ MY_CMD(
 	version,	4,	1,	do_print_version,
 	"version - print version information\r\n",
 	"version\r\n"
+);
+
+int do_set (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	uint32_t data_temp = 0;
+	switch (argc)
+	{
+		case 3:   
+			if (strcmp (argv[1], "motor-idle") == 0){
+				data_temp = simple_strtol(argv[2], NULL, 10);
+				if (data_temp > 0){
+					para_set_value.data.motor_idle_t = data_temp;
+					Writekick_value ();
+				}else{
+					cy_println ("value must be  > 0");
+				}
+				break;
+			}else if (strcmp (argv[1], "boot-delay") == 0){
+				data_temp = simple_strtol(argv[2], NULL, 10);
+				if (data_temp > 0){
+					para_set_value.data.system_boot_delay = data_temp;
+					Writekick_value ();
+				}else{
+					cy_println ("value must be > 0");
+				}
+				break;
+			}          
+			break;
+		default:
+			cy_print ("Usage:%s", cmdtp->usage);return 1;
+	}
+	print_system_env_info ();
+	return 0;
+}
+
+MY_CMD(
+	set,	10,	1,	do_set,
+	"set - set parameter\r\n",
+	"set workstep 1\r\n"
+);
+
+/*
+ * reset the cpu by setting up the watchdog timer and let him time out
+ */
+int do_reset (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	cy_println ("Reset System...");
+	NVIC_SystemReset ();
+	return 0;
+}
+MY_CMD(
+	reset,	8,	1,	do_reset,
+	"reset - reset the system\r\n",
+	"reset\r\n"
+);
+
+void print_system_env_info (void) 
+{                  
+	cy_println("\n----------------------------------------------------");   
+	PRINT_VERSION();
+	cy_println("----------------print system env info---------------");        
+	cy_println ("print_wave_to_pc       = %d", sys_env.print_wave_to_pc);             
+	//cy_println ("auto_stop            = %d", sys_env.auto_stop);                  
+	cy_println ("auto_clear             = %d", sys_env.auto_clear);                     
+	cy_println ("save_ng_data           = %d", sys_env.save_ng_data);             
+	cy_println ("save_good_data         = %d", sys_env.save_good_data);              
+	cy_println ("coin_index             = %d", sys_env.coin_index);            
+	cy_println ("country_index          = %d", sys_env.country_index);        
+	cy_println ("workstep               = %d", sys_env.workstep);         
+	cy_println ("system_boot_delay      = %d", para_set_value.data.system_boot_delay);   
+	cy_println ("system_mode            = %d", para_set_value.data.system_mode);               
+	cy_println ("coin_cross_time        = %d", sys_env.coin_cross_time);   
+	cy_println("----------------------------------------------------");       
+	cy_println ("kick_start_delay_time1 = %d", para_set_value.data.kick_start_delay_t1);         
+	cy_println ("kick_keep_time1        = %d", para_set_value.data.kick_keep_t1);             
+	cy_println("----------------------------------------------------");        
+	cy_println ("kick_start_delay_time2 = %d", para_set_value.data.kick_start_delay_t2);         
+	cy_println ("kick_keep_time2        = %d", para_set_value.data.kick_keep_t2);             
+	cy_println("----------------------------------------------------");           
+	cy_println ("pre_count_stop_n       = %d", para_set_value.data.pre_count_stop_n);    
+	cy_println ("coin_full_rej_pos      = %d", para_set_value.data.coin_full_rej_pos);        
+	cy_println("----------------------------------------------------");  
+	cy_println ("motor_idle_t           = %d", para_set_value.data.motor_idle_t);            
+	cy_println("----------------------------------------------------");
+}
+void print_coin_env_info (void)
+{                                                                       
+	cy_println("-----------------print coin env info----------------");        
+	cy_println ("ad0_averaged_value    = %d", coin_env.ad0_averaged_value / ADSAMPNUM);             
+	cy_println ("ad1_averaged_value    = %d", coin_env.ad1_averaged_value / ADSAMPNUM);                    
+	cy_println ("ad2_averaged_value    = %d", coin_env.ad2_averaged_value / ADSAMPNUM);               
+	cy_println ("std_down_value0       = %d", coin_env.std_down_value0);             
+	cy_println ("std_up_value0         = %d", coin_env.std_up_value0);              
+	cy_println ("ad0_step              = %d", coin_env.ad0_step);            
+	cy_println ("ad1_step              = %d", coin_env.ad1_step);        
+	cy_println ("ad2_step              = %d", coin_env.ad2_step);           
+	cy_println("----------------------------------------------------");         
+	cy_println ("runstep               = %d", runstep);             
+	cy_println ("coin_env.kick_Q_index = %d", coin_env.kick_Q_index);         
+	cy_println ("ccstep                = %d", ccstep);                           
+	cy_println("----------------------------------------------------");    
+}
+void print_all_coin_pre_value (void)
+{	
+	int16_t i;                                                                                                                                 
+	cy_println("--------------------print country %2d coin value---------------------", coinchoose);                                      
+	cy_println (" coin  min0        max0        min1        max1        min2        max2 ");     
+	for (i = 0; i < COIN_TYPE_NUM; i++)
+	{
+		cy_println ("   %2d (%4d %3d)  (%4d %3d)  (%4d %3d)  (%4d %3d)  (%4d %3d)  (%4d %3d)", 
+								i,
+								pre_value.country[coinchoose].coin[i].data.min0,
+								pre_value.country[coinchoose].coin[i].data.offsetmin0,
+								pre_value.country[coinchoose].coin[i].data.max0,
+								pre_value.country[coinchoose].coin[i].data.offsetmax0,
+								pre_value.country[coinchoose].coin[i].data.min1,
+								pre_value.country[coinchoose].coin[i].data.offsetmin1,
+								pre_value.country[coinchoose].coin[i].data.max1,
+								pre_value.country[coinchoose].coin[i].data.offsetmax1,
+								pre_value.country[coinchoose].coin[i].data.min2,
+								pre_value.country[coinchoose].coin[i].data.offsetmin2,
+								pre_value.country[coinchoose].coin[i].data.max2,
+								pre_value.country[coinchoose].coin[i].data.offsetmax2
+								);       
+	}		
+	cy_println("---------------------------------------------------------------------");                                                                        
+}
+
+
+void print_cmp_data (int16_t _coin_index)
+{
+	cy_println ("ad std offset complete");
+	cy_println ("----------------------------------------------------------------------");   	
+	cy_println ("----------print country %d coin %2d cmp data----------------------------", sys_env.country_index, _coin_index);   
+	cy_println ("----------------------------------------------------------------------");  
+//	if (adstd_offset () != 1){
+//		cy_println("ad std offset error");
+//		return;
+//	}
+	cy_println ("real     std0 = %4d          std1 = %4d     std2 = %4d", std_ad0, std_ad1, std_ad2);
+	cy_println ("----------------------------------------------------------------------");   
+	cy_println ("save     std0 = %4d          std1 = %4d     std2 = %4d",
+			pre_value.country[coinchoose].coin[_coin_index].data.std0,
+			pre_value.country[coinchoose].coin[_coin_index].data.std1,
+			pre_value.country[coinchoose].coin[_coin_index].data.std2);
+	
+	cy_println ("offset   max0 = %4d          max1 = %4d     max2 = %4d", 
+			pre_value.country[coinchoose].coin[_coin_index].data.offsetmax0, 
+			pre_value.country[coinchoose].coin[_coin_index].data.offsetmax1, 
+			pre_value.country[coinchoose].coin[_coin_index].data.offsetmax2);
+	cy_println ("original max0 = %4d          max1 = %4d     max2 = %4d", 
+			pre_value.country[coinchoose].coin[_coin_index].data.max0, 
+			pre_value.country[coinchoose].coin[_coin_index].data.max1, 
+			pre_value.country[coinchoose].coin[_coin_index].data.max2);
+	cy_println ("offset   min0 = %4d          min1 = %4d     min2 = %4d", 
+			pre_value.country[coinchoose].coin[_coin_index].data.offsetmin0, 
+			pre_value.country[coinchoose].coin[_coin_index].data.offsetmin1, 
+			pre_value.country[coinchoose].coin[_coin_index].data.offsetmin2);    
+	cy_println ("original min0 = %4d          min1 = %4d     min2 = %4d", 
+			pre_value.country[coinchoose].coin[_coin_index].data.min0, 
+			pre_value.country[coinchoose].coin[_coin_index].data.min1, 
+			pre_value.country[coinchoose].coin[_coin_index].data.min2);                                                  
+	cy_println("----------------------------------------------------------------------");    
+#ifdef SAMPLE_METHOD_0
+	cy_println ("                  H                     M-H                    L-M"); 
+#endif 
+#ifdef SAMPLE_METHOD_1
+	cy_println ("                  H                      M                      L "); 
+#endif
+	cy_println ("compare_max0  = %4d    compare_max1 = %4d    compare_max2 = %4d", 
+				coin_cmp_value[_coin_index].compare_max0, 
+				coin_cmp_value[_coin_index].compare_max1, 
+				coin_cmp_value[_coin_index].compare_max2);
+	cy_println ("compare_min0  = %4d    compare_min1 = %4d    compare_min2 = %4d", 
+				coin_cmp_value[_coin_index].compare_min0, 
+				coin_cmp_value[_coin_index].compare_min1, 
+				coin_cmp_value[_coin_index].compare_min2);                                                      
+	cy_println("----------------------------------------------------------------------");                   
+}
+	
+void print_ng_data (int16_t index)
+{	
+	int	i;  
+//	if (ng_info_echo_off)
+//		return;
+	print_cmp_data (index);                                                                                                                     
+	cy_println("-------------------print %6d ng data-------------------------------", ng_value_index);                                               
+	//cy_println ("   index   ad_index    coin_value0   coin_value1   coin_value2");                                                                  
+	cy_println ("   index   ad_index         H             M             L");                                                                   
+	for (i = 0; i < ng_value_index; i++)                                                                                                      
+	{                                                                                                                                          
+		cy_println ("%d   %4d      %4d        %4d          %4d          %4d", NG_value_buf[i].use_index, i + 1, NG_value_buf[i].ad_index, NG_value_buf[i].AD0, NG_value_buf[i].AD1, NG_value_buf[i].AD2);                   
+	}                                                                                                                                        
+	cy_println("----------------------------------------------------------------------");                                                                        
+}
+
+void print_good_data (int16_t index)
+{	
+	int	i;  
+	
+	print_cmp_data (index);                                                                                                                                      
+	cy_println("-------------------print %6d good data-----------------------------", good_value_index);                                                 
+	//cy_println ("   index   ad_index    coin_value0   coin_value1   coin_value2");                                                               
+	cy_println ("   index   ad_index         H             M             L");                                                          
+	for (i = 0; i < good_value_index; i++)                                                                                                      
+	{                                                                                                                                        
+		cy_println ("%d   %4d      %4d        %4d          %4d          %4d", GOOD_value_buf[i].use_index, i + 1, GOOD_value_buf[i].ad_index, GOOD_value_buf[i].AD0, GOOD_value_buf[i].AD1, GOOD_value_buf[i].AD2);                      
+	}                                                                                                                                        
+	cy_println("---------------------------------------------------------------------");                                                                        
+}
+int do_print (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	switch (argc) {
+		case 1:
+			print_system_env_info ();
+			break;
+		case 2:
+			if (strcmp (argv[1], "env-s") == 0){
+				print_system_env_info(); 
+			}else if (strcmp (argv[1], "env-c") == 0){
+				print_coin_env_info(); 
+			}else if (strcmp (argv[1], "coin") == 0){
+				print_all_coin_pre_value(); 
+			}else if (strcmp (argv[1], "ng") == 0){
+				print_ng_data (sys_env.coin_index); 
+			}else if (strcmp (argv[1], "gd") == 0){
+				print_good_data (sys_env.coin_index);
+			} 
+			break;      
+		case 3:
+			if (strcmp (argv[1], "env-s") == 0){
+				print_system_env_info(); 
+			}else if (strcmp (argv[1], "env-c") == 0){
+				print_all_coin_pre_value(); 
+			}
+			break;
+		default:break;
+	}
+	return 0;
+}
+MY_CMD(
+	print,	4,	1,	do_print,
+	"print - print information\r\n",
+	"print env-s\r\n"
 );
 
 

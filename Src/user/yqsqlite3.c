@@ -83,116 +83,25 @@ int16_t test_erase_r_code (int16_t r_code)
 	return -1;
 }
 
-void initial_nandflash(void)    //nandflash
-{
-
-	uint16_t i=0, j;
-
-	cy_println ("sizeof (s_coin_parameter_value)   = %d", sizeof (s_coin_parameter_value));
-	cy_println ("sizeof (u_coin_cmp_value) = %d", sizeof (u_coin_cmp_value));
-	
-	cy_println ("sizeof (para_set_value)   = %d", sizeof (para_set_value));
-	cy_println ("sizeof (u_coin_pre_value) = %d", sizeof (u_coin_pre_value));
-	
-	ASSERT(sizeof (para_set_value) > PAGE_BYTE_SIZE);
-	ASSERT(sizeof (u_coin_pre_value) > PAGE_BYTE_SIZE);
-	
-	cy_println ("Start Check Data ...!");
-	test_read_r_code (Nand_ReadPage(PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM, (uint8_t *)&para_set_value));
-		
-	if(para_set_value.data.magic_num != MAGIC_NUM){    //不满足条件需要初始化    这里每个国家的信息都 初始化了 在界面更换硬币时不用担心值不确定
-		cy_print("#####   FIRST USE ##### \r\n");
-		para_set_value.data.magic_num = MAGIC_NUM;
-		para_set_value.data.coin_id = 0;
-		para_set_value.data.country_id = 0;
-		para_set_value.data.db_total_item_num = 0;
-		para_set_value.data.op_id = 0;
-		para_set_value.data.rej_level = 0;
-		para_set_value.data.kick_start_delay_t1 = 1;
-		para_set_value.data.kick_start_delay_t2 = 1;
-		para_set_value.data.kick_keep_t1 = 80;
-		para_set_value.data.kick_keep_t2 = 80;
-		para_set_value.data.coin_full_rej_pos = 1;
-		para_set_value.data.motor_idle_t = 400;
-		para_set_value.data.adj_offset_position = 4096;
-		para_set_value.data.pre_count_stop_n = 1;
-		para_set_value.data.system_boot_delay = 0;
-		para_set_value.data.system_mode = 1;
-		
-		for (i = 0; i < COIN_TYPE_NUM; i++){
-			para_set_value.data.precoin_set_num[i] = 50;
-		}
-	
-		test_erase_r_code (Nand_EraseBlock(PUBULIC_DATA_START_BLOCK_NUM ));
-		cy_println ("erase block %d completed", PUBULIC_DATA_START_BLOCK_NUM);
-		test_write_r_code (Nand_WritePage(PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM, (uint8_t *)&para_set_value));
-		cy_println ("write block %d page %d completed", PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM);
-		
-		for (i = 0; i < COUNTRY_NUM; i++){
-			for (j = 0; j < COIN_TYPE_NUM; j++){
-				pre_value.country[i].coin[j].data.max0 = 1023;
-				pre_value.country[i].coin[j].data.min0 = 1023;
-				pre_value.country[i].coin[j].data.max1 = 1023;
-				pre_value.country[i].coin[j].data.min1 = 1023;
-				pre_value.country[i].coin[j].data.max2 = 1023;
-				pre_value.country[i].coin[j].data.min2 = 1023;
-				pre_value.country[i].coin[j].data.std0 = 900;
-				pre_value.country[i].coin[j].data.std1 = 900;
-				pre_value.country[i].coin[j].data.std2 = 900;
-				pre_value.country[i].coin[j].data.offsetmax0 = 10;
-				pre_value.country[i].coin[j].data.offsetmin0 = -10;
-				pre_value.country[i].coin[j].data.offsetmax1 = 10;
-				pre_value.country[i].coin[j].data.offsetmin1 = -10;
-				pre_value.country[i].coin[j].data.offsetmax2 = 10;
-				pre_value.country[i].coin[j].data.offsetmin2 = -10;
-			}
-			test_write_r_code (Nand_WritePage(COUNTRY0_COIN_PRE_VALUE_START_BLOCK_NUM, (COUNTRY0_COIN_PRE_VALUE_START_PAGE_NUM + i), (uint8_t *)(&(pre_value.country[i]))));
-			cy_println ("write block %d page %d completed", 
-						(COUNTRY0_COIN_PRE_VALUE_START_BLOCK_NUM ),
-						(COUNTRY0_COIN_PRE_VALUE_START_PAGE_NUM + i)); 
-		}
-	}else{
-		cy_println ("Check Data Completed!");
-	}
-	
-}
-
-
-void Writekick_value(void)		//写入 当前踢币时延  踢币持续时间 转盘堵转时间  传送带传送时间 
-{
-	write_para ();	
-}
-
 void read_kick_value (void)
 {
-	test_read_r_code (Nand_ReadPage(PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM, (uint8_t *)&para_set_value));
+	//test_read_r_code (Nand_ReadPage(PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM, (uint8_t *)&para_set_value));
+	framReadBytes (FRAM_PARA_SET_VALUE_ADDR, (uint8_t*)&para_set_value, sizeof (s_coin_parameter_value));
 }
 void write_kick_value (void)
 {
-	test_write_r_code (Nand_WritePage(PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM, (uint8_t *)&para_set_value));
-}
-
-void read_para(void)  //读出 当前币种 历史数据 总
-{
-	read_kick_value ();
-	read_coin_value ();
-}
-
-void write_para (void)	//写入 当前币种 历史数据 总
-{
-	test_erase_r_code (Nand_EraseBlock(PUBULIC_DATA_START_BLOCK_NUM ));
-	write_kick_value ();
-	write_coin_value ();
-}
-
-						
+	//test_write_r_code (Nand_WritePage(PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM, (uint8_t *)&para_set_value));
+	framWriteEnable ();
+	framWriteBytes (FRAM_PARA_SET_VALUE_ADDR, (uint8_t*)&para_set_value, sizeof (s_coin_parameter_value));
+}						
 void read_coin_value(void) 	 // read  COIN  0--8
 {
 	uint32_t i;
-	for (i = 0; i < COUNTRY_NUM; i++)
-	{
-		test_read_r_code (Nand_ReadPage(COUNTRY0_COIN_PRE_VALUE_START_BLOCK_NUM, COUNTRY0_COIN_PRE_VALUE_START_PAGE_NUM + i, (uint8_t *)(&(pre_value.country[i]))));
-	}
+//	for (i = 0; i < COUNTRY_NUM; i++)
+//	{
+//		//test_read_r_code (Nand_ReadPage(COUNTRY0_COIN_PRE_VALUE_START_BLOCK_NUM, COUNTRY0_COIN_PRE_VALUE_START_PAGE_NUM + i, (uint8_t *)(&(pre_value.country[i]))));
+//	}
+	framReadBytes (FRAM_COIN_PRE_VALUE_ADDR, (uint8_t*)&pre_value, sizeof (pre_value.country[0].coin));
 	
 	//映射硬币金额
 	pre_value.country[COUNTRY_ID].coin[0].data.money = MONEY_1_00; //一元
@@ -229,7 +138,7 @@ void read_coin_value(void) 	 // read  COIN  0--8
 	pre_value.country[COUNTRY_ID].coin[5].data.hmi_pre_count_set_addr = ADDR_YZS4; //一角小铝
 	pre_value.country[COUNTRY_ID].coin[6].data.hmi_pre_count_set_addr = ADDR_YZS6; //五分
 	pre_value.country[COUNTRY_ID].coin[7].data.hmi_pre_count_set_addr = ADDR_YZS7; //二分
-	pre_value.country[COUNTRY_ID].coin[8].data.hmi_pre_count_set_addr = ADDR_YZint8_t; //一分
+	pre_value.country[COUNTRY_ID].coin[8].data.hmi_pre_count_set_addr = ADDR_YZS8; //一分
 	pre_value.country[COUNTRY_ID].coin[9].data.hmi_pre_count_set_addr = ADDR_YZS9; //纪念币10元
 	pre_value.country[COUNTRY_ID].coin[10].data.hmi_pre_count_set_addr = ADDR_YZS10; //纪念币5元
 	
@@ -251,17 +160,125 @@ void read_coin_value(void) 	 // read  COIN  0--8
 
 void write_coin_value (void)
 {
-	uint16_t i;
+//	uint16_t i;
 	
-	for (i = 0; i < COUNTRY_NUM; i++)
-	{
-		test_write_r_code (Nand_WritePage(COUNTRY0_COIN_PRE_VALUE_START_BLOCK_NUM, (COUNTRY0_COIN_PRE_VALUE_START_PAGE_NUM + i), (uint8_t *)(&(pre_value.country[i]))));
+//	for (i = 0; i < COUNTRY_NUM; i++)
+//	{
+//		test_write_r_code (Nand_WritePage(COUNTRY0_COIN_PRE_VALUE_START_BLOCK_NUM, (COUNTRY0_COIN_PRE_VALUE_START_PAGE_NUM + i), (uint8_t *)(&(pre_value.country[i]))));
+//	}
+	framWriteEnable ();
+	framWriteBytes (FRAM_COIN_PRE_VALUE_ADDR, (uint8_t*)&pre_value, sizeof (pre_value.country[0].coin));
+}
+
+
+void Writekick_value(void)		//写入 当前踢币时延  踢币持续时间 转盘堵转时间  传送带传送时间 
+{
+	write_kick_value ();
+}
+
+
+
+void read_para(void)  //读出 当前币种 历史数据 总
+{
+	read_kick_value ();
+	read_coin_value ();
+}
+
+void write_para (void)	//写入 当前币种 历史数据 总
+{
+	test_erase_r_code (Nand_EraseBlock(PUBULIC_DATA_START_BLOCK_NUM ));
+	write_kick_value ();
+	write_coin_value ();
+}
+
+
+void initial_nandflash(void)    //nandflash
+{
+
+	uint16_t i=0, j;
+
+	cy_println ("sizeof (s_coin_cmp_value)         = %d", sizeof (s_coin_cmp_value));
+	cy_println ("sizeof (u_coin_cmp_value)         = %d", sizeof (u_coin_cmp_value));
+	cy_println ("sizeof (pre_value.country[0].coin)         = %d", sizeof (pre_value.country[0].coin));
+	cy_println ("sizeof (s_coin_parameter_value)   = %d", sizeof (s_coin_parameter_value));
+	
+	cy_println ("sizeof (para_set_value)           = %d", sizeof (para_set_value));
+	cy_println ("sizeof (u_coin_pre_value)         = %d", sizeof (u_coin_pre_value));
+	
+	ASSERT(sizeof (para_set_value) > PAGE_BYTE_SIZE);
+	ASSERT(sizeof (u_coin_pre_value) > PAGE_BYTE_SIZE);
+	
+	cy_println ("Start Check Data ...!");
+	//test_read_r_code (Nand_ReadPage(PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM, (uint8_t *)&para_set_value));
+		
+	read_kick_value ();
+	if(para_set_value.data.magic_num != MAGIC_NUM){    //不满足条件需要初始化    这里每个国家的信息都 初始化了 在界面更换硬币时不用担心值不确定
+		cy_print("#####   FIRST USE PARA   ##### \r\n");
+		para_set_value.data.magic_num = MAGIC_NUM;
+		para_set_value.data.coin_id = 0;
+		para_set_value.data.country_id = 0;
+		para_set_value.data.db_total_item_num = 0;
+		para_set_value.data.op_id = 0;
+		para_set_value.data.rej_level = 0;
+		para_set_value.data.kick_start_delay_t1 = 1;
+		para_set_value.data.kick_start_delay_t2 = 1;
+		para_set_value.data.kick_keep_t1 = 80;
+		para_set_value.data.kick_keep_t2 = 80;
+		para_set_value.data.coin_full_rej_pos = 1;
+		para_set_value.data.motor_idle_t = 400;
+		para_set_value.data.adj_offset_position = 4096;
+		para_set_value.data.pre_count_stop_n = 1;
+		para_set_value.data.system_boot_delay = 0;
+		para_set_value.data.system_mode = 1;
+		
+		for (i = 0; i < COIN_TYPE_NUM; i++){
+			para_set_value.data.precoin_set_num[i] = 50;
+		}
+		write_kick_value ();
+//		test_erase_r_code (Nand_EraseBlock(PUBULIC_DATA_START_BLOCK_NUM ));
+//		cy_println ("erase block %d completed", PUBULIC_DATA_START_BLOCK_NUM);
+//		test_write_r_code (Nand_WritePage(PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM, (uint8_t *)&para_set_value));
+//		cy_println ("write block %d page %d completed", PUBULIC_DATA_START_BLOCK_NUM, PUBULIC_DATA_START_PAGE_NUM);
+	}
+	read_coin_value ();
+	if(pre_value.country[0].coin[0].data.magic_num != MAGIC_NUM){ 		
+		cy_print("#####   FIRST USE COIN   ##### \r\n");
+		for (i = 0; i < COUNTRY_NUM; i++){
+			for (j = 0; j < COIN_TYPE_NUM; j++){
+				pre_value.country[i].coin[j].data.magic_num = MAGIC_NUM;
+				pre_value.country[i].coin[j].data.max0 = 1023;
+				pre_value.country[i].coin[j].data.min0 = 1023;
+				pre_value.country[i].coin[j].data.max1 = 1023;
+				pre_value.country[i].coin[j].data.min1 = 1023;
+				pre_value.country[i].coin[j].data.max2 = 1023;
+				pre_value.country[i].coin[j].data.min2 = 1023;
+				pre_value.country[i].coin[j].data.std0 = 900;
+				pre_value.country[i].coin[j].data.std1 = 900;
+				pre_value.country[i].coin[j].data.std2 = 900;
+				pre_value.country[i].coin[j].data.offsetmax0 = 10;
+				pre_value.country[i].coin[j].data.offsetmin0 = -10;
+				pre_value.country[i].coin[j].data.offsetmax1 = 10;
+				pre_value.country[i].coin[j].data.offsetmin1 = -10;
+				pre_value.country[i].coin[j].data.offsetmax2 = 10;
+				pre_value.country[i].coin[j].data.offsetmin2 = -10;
+			}
+//			test_write_r_code (Nand_WritePage(COUNTRY0_COIN_PRE_VALUE_START_BLOCK_NUM, (COUNTRY0_COIN_PRE_VALUE_START_PAGE_NUM + i), (uint8_t *)(&(pre_value.country[i]))));
+//			cy_println ("write block %d page %d completed", 
+//						(COUNTRY0_COIN_PRE_VALUE_START_BLOCK_NUM ),
+//						(COUNTRY0_COIN_PRE_VALUE_START_PAGE_NUM + i)); 
+		}
+		write_coin_value ();
+	}else{
+		cy_println ("Check Data Completed!");
 	}
 }
 
 void ini_screen (void)
 {
 	int i;
+	
+	touchScreenDataCount = 0;  // 串口2接收 字节 计数 
+	
 	dgus_tf1word(ADDR_CNCH,coinchoose);  //国家币种图标变量
 	dgus_tf1word(ADDR_PGH1,para_set_value.data.coin_full_rej_pos);   // 真币剔除工号
 	dgus_tf1word(ADDR_KICK_DELAY_T1, para_set_value.data.kick_start_delay_t1);	//第一个踢币延时时间
@@ -298,7 +315,7 @@ void ini_screen (void)
 void ini_picaddr(void) //币种切换时的 初始化地址函数
 {
 	int pi;
-	read_para();		 //开机 读入当前 当前累计总额  当前总量 当前异币
+	//read_para();		 //开机 读入当前 当前累计总额  当前总量 当前异币
 	// 各币种 数量	开机初始化为零
 	
 	for(pi = 0;pi<COIN_TYPE_NUM;pi++)
@@ -360,21 +377,21 @@ void yqsql_exec(uint16_t chos)
 			while(1)     // read time 
 			{
 				comscreen(dgus_readt,6);	//read time
-				while(touch_flag ==0){;}
+				while(touchScreenDataFlag ==0){;}
 					
-				if (touchnum[7]>0)
+				if (touchScreenDataBuffer[7]>0)
 				{
-					db_item_info_temp->time[0] = touchnum[6];	
-					db_item_info_temp->time[1] = touchnum[7];	
-					db_item_info_temp->time[2] = touchnum[8];	
-					db_item_info_temp->time[3] = touchnum[10];	
-					db_item_info_temp->time[4] = touchnum[11];					
-					touch_flag = 0;
+					db_item_info_temp->time[0] = touchScreenDataBuffer[6];	
+					db_item_info_temp->time[1] = touchScreenDataBuffer[7];	
+					db_item_info_temp->time[2] = touchScreenDataBuffer[8];	
+					db_item_info_temp->time[3] = touchScreenDataBuffer[10];	
+					db_item_info_temp->time[4] = touchScreenDataBuffer[11];					
+					touchScreenDataFlag = 0;
 					break;
 				}
 				else
 				{
-					touch_flag = 0;
+					touchScreenDataFlag = 0;
 				}
 			}
 

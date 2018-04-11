@@ -5,7 +5,9 @@
 
 volatile uint32_t runtime = 0;   // // 执行件用的计时变量
 unsigned short int runstep = 0;   //  部件动作步骤号
-volatile uint32_t time = 0;   // //部件测试时踢币电磁铁用的计时变量
+volatile uint32_t kicktime = 0;   // //部件测试时踢币电磁铁用的计时变量
+
+uint32_t motor_pwm_count;   // //踢币电磁铁 用的计时
 
 
 void deviceinit(void)	//开机先把通道上的币挡下去 
@@ -93,12 +95,12 @@ void runfunction(void)   //部件动作函数
 			break;
 		case 20://预置数到，自动停机
 			STORAGE_MOTOR_STOPRUN();	//  停转盘电机
-			runtime = 100; // 2秒
+			runtime = 2000; // 2秒
 			runstep = 100;
 			break;
 		case 40://手动停机
 			STORAGE_MOTOR_STOPRUN();	//  停转盘电机
-			runtime = 100; // 2秒
+			runtime = 2000; // 2秒
 			runstep = 120;
 			break;
 		case 100:
@@ -114,6 +116,14 @@ void runfunction(void)   //部件动作函数
 			}
 			break;
 		default:break;
+	}
+	
+	if(blockflag == 0){//堵币
+		SEND_ERROR(PRESSMLOCKED);
+	}
+	if ((STORAGE_MOTOR_STATUS () == STARTRUN) && (motor_pwm_count > 250)){
+		cy_println ("motor_pwm:%d", motor_pwm_count);
+		SEND_ERROR(STORAGE_MOTOR_ERROR);
 	}
 }
 

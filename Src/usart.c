@@ -54,14 +54,18 @@
 #include "dma.h"
 
 /* USER CODE BEGIN 0 */
+#include "user_app.h"
 
-USART_RECEIVETYPE UsartType; 
+USART_RECEIVETYPE Usart1Type; 
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart1_tx;
+DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart3_rx;
+DMA_HandleTypeDef hdma_usart3_tx;
 
 /* USART1 init function */
 
@@ -88,7 +92,7 @@ void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -163,9 +167,27 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
     __HAL_LINKDMA(uartHandle,hdmatx,hdma_usart1_tx);
 
+    /* USART1_RX Init */
+    hdma_usart1_rx.Instance = DMA2_Stream2;
+    hdma_usart1_rx.Init.Channel = DMA_CHANNEL_4;
+    hdma_usart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_usart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_usart1_rx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_usart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_usart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_usart1_rx.Init.Mode = DMA_NORMAL;
+    hdma_usart1_rx.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_usart1_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
+    {
+      _Error_Handler(__FILE__, __LINE__);
+    }
+
+    __HAL_LINKDMA(uartHandle,hdmarx,hdma_usart1_rx);
+
   /* USER CODE BEGIN USART1_MspInit 1 */
-	UsartType.RX_flag = 0;
-	//UsartType.RX_index = 0;
+	Usart1Type.RX_flag = 0;
+	//Usart1Type.RX_index = 0;
   /* USER CODE END USART1_MspInit 1 */
   }
   else if(uartHandle->Instance==USART2)
@@ -210,6 +232,46 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+    /* USART3 DMA Init */
+    /* USART3_RX Init */
+    hdma_usart3_rx.Instance = DMA1_Stream1;
+    hdma_usart3_rx.Init.Channel = DMA_CHANNEL_4;
+    hdma_usart3_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_usart3_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_usart3_rx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_usart3_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_usart3_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_usart3_rx.Init.Mode = DMA_NORMAL;
+    hdma_usart3_rx.Init.Priority = DMA_PRIORITY_MEDIUM;
+    hdma_usart3_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    if (HAL_DMA_Init(&hdma_usart3_rx) != HAL_OK)
+    {
+      _Error_Handler(__FILE__, __LINE__);
+    }
+
+    __HAL_LINKDMA(uartHandle,hdmarx,hdma_usart3_rx);
+
+    /* USART3_TX Init */
+    hdma_usart3_tx.Instance = DMA1_Stream3;
+    hdma_usart3_tx.Init.Channel = DMA_CHANNEL_4;
+    hdma_usart3_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_usart3_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_usart3_tx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_usart3_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_usart3_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_usart3_tx.Init.Mode = DMA_NORMAL;
+    hdma_usart3_tx.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_usart3_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    if (HAL_DMA_Init(&hdma_usart3_tx) != HAL_OK)
+    {
+      _Error_Handler(__FILE__, __LINE__);
+    }
+
+    __HAL_LINKDMA(uartHandle,hdmatx,hdma_usart3_tx);
+
+    /* USART3 interrupt Init */
+    HAL_NVIC_SetPriority(USART3_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(USART3_IRQn);
   /* USER CODE BEGIN USART3_MspInit 1 */
 
   /* USER CODE END USART3_MspInit 1 */
@@ -235,6 +297,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
     /* USART1 DMA DeInit */
     HAL_DMA_DeInit(uartHandle->hdmatx);
+    HAL_DMA_DeInit(uartHandle->hdmarx);
 
     /* USART1 interrupt Deinit */
     HAL_NVIC_DisableIRQ(USART1_IRQn);
@@ -274,6 +337,12 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     */
     HAL_GPIO_DeInit(GPIOD, GPIO_PIN_8|GPIO_PIN_9);
 
+    /* USART3 DMA DeInit */
+    HAL_DMA_DeInit(uartHandle->hdmarx);
+    HAL_DMA_DeInit(uartHandle->hdmatx);
+
+    /* USART3 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(USART3_IRQn);
   /* USER CODE BEGIN USART3_MspDeInit 1 */
 
   /* USER CODE END USART3_MspDeInit 1 */
@@ -308,46 +377,54 @@ PUTCHAR_PROTOTYPE
   *                the configuration information for the specified UART module.
   * @retval None
   */
-void UsartReceive_IDLE(UART_HandleTypeDef *huart)
+void Usart3Receive_IDLE(UART_HandleTypeDef *huart)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(huart);
   /* NOTE: This function Should not be modified, when the callback is needed,
            the HAL_UART_TxCpltCallback could be implemented in the user file
    */
-//	uint32_t temp;  
+	uint16_t temp;  
   
 	if((__HAL_UART_GET_FLAG(huart,UART_FLAG_IDLE) != RESET))  
 	{   
-		__HAL_UART_CLEAR_IDLEFLAG(&huart1);  
-		//HAL_UART_DMAStop(&huart1);  
-//		temp = huart1.hdmarx->Instance->NDTR;  
-//		UsartType.RX_Size =  RX_LEN - temp;   
-		UsartType.RX_flag=1;  
-		//HAL_UART_Receive_DMA(&huart1,UsartType.RX_pData,RX_LEN);  
+		__HAL_UART_CLEAR_IDLEFLAG(huart);  
+		HAL_UART_DMAStop(huart);  
+		temp = huart->hdmarx->Instance->NDTR;  
+		touchScreenDataCount =  TOUCH_SCREEN_DATA_BUF_LEN - temp;   
+		touchScreenDataFlag = 1;  
+		HAL_UART_Receive_DMA(huart, touchScreenDataBuffer, TOUCH_SCREEN_DATA_BUF_LEN);  
    } 
   //HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
 }
-void UsartReceive_RXNE(UART_HandleTypeDef *huart)
+void Usart1Receive_RXNE(UART_HandleTypeDef *huart)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(huart);
   /* NOTE: This function Should not be modified, when the callback is needed,
            the HAL_UART_TxCpltCallback could be implemented in the user file
    */
-//	uint32_t temp;  
+//	uint16_t temp;  
   
 	if((__HAL_UART_GET_FLAG(huart,UART_FLAG_RXNE) != RESET))  
 	{   
 		//__HAL_UART_CLEAR_PEFLAG(&huart1);  
 		//HAL_UART_DMAStop(&huart1);  
 		//temp = huart1.hdmarx->Instance->NDTR;  
-		//UsartType.RX_pData[UsartType.RX_Size++] = huart1.Instance->DR;
-		UsartType.RX_temp = huart1.Instance->DR;
-		UsartType.RX_flag=1;  
-		//HAL_UART_Receive_DMA(&huart1,UsartType.RX_pData,RX_LEN);  
+		//Usart1Type.RX_pData[Usart1Type.RX_Size++] = huart1.Instance->DR;
+		Usart1Type.RX_temp = huart1.Instance->DR;
+		Usart1Type.RX_flag=1;  
+		//HAL_UART_Receive_DMA(&huart1,Usart1Type.RX_pData,RX_LEN);  
    } 
   //HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+//	HAL_UART_DMAStop(huart);  
+//	HAL_UART_Receive_DMA(&huart1, &g_uart1_recv_buf[g_uart1_buf_index][0], UART1_RECV_BUF_LEN);
+//	g_uart1_buf_index++;
+//	g_uart1_buf_index %= UART1_RECV_BUF_NUM;
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)

@@ -52,11 +52,11 @@
 #include "cmsis_os.h"
 #include "adc.h"
 #include "dma.h"
-#include "eth.h"
+#include "lwip.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
-#include "usb_otg.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
@@ -67,8 +67,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-	uint8_t aTxMessage[] = "\r\n*** UART-Hyperterminal communication based on DMA ***\r\n";
-	uint32_t ADC_Value[3];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,7 +82,24 @@ static void MX_NVIC_Init(void);
 
 /* USER CODE BEGIN 0 */
 
-void coin_init (void);
+
+volatile uint32_t ulHighFrequencyTimerTicks;
+void configureTimerForRunTimeStats(void)
+{
+	ulHighFrequencyTimerTicks = 0;
+	HAL_TIM_Base_Start_IT(&htim13);
+}
+
+ unsigned long getRunTimeCounterValue(void)
+{
+	return ulHighFrequencyTimerTicks;
+}
+
+void INTX_ENABLE(void)
+{
+	__ASM volatile("cpsie i");		  
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -94,7 +110,10 @@ void coin_init (void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+//	uint8_t data_buf[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+//	uint32_t i;
+	
+	SCB->VTOR = FLASH_BASE | 0x20000; /* Vector Table Relocation in Internal */
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -120,22 +139,32 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
-  MX_USB_OTG_FS_PCD_Init();
   MX_SPI1_Init();
-  MX_ETH_Init();
   MX_TIM3_Init();
+  MX_TIM13_Init();
 
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-	coin_init ();
-//	HAL_UART_Receive_DMA(&huart1,UsartType.RX_pData,RX_LEN); 
+	//开启所有中断
+	INTX_ENABLE ();
+	//coin_init ();
+	//MX_LWIP_Init(); 
 
-  //HAL_UART_Transmit_DMA(&huart1, (uint8_t *)aTxMessage, sizeof(aTxMessage));
-  __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE); 
-	HAL_TIM_Base_Start_IT(&htim3);
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&ADC_Value, 3);
-	cy_println ("[Please press ENTER to activate this console]");
+	//erase_NAND_BLOK ();
+	//write_NAND_PAGE();
+	//read_NAND_PAGE ();
+//	cy_println ();
+//	HAL_GPIO_WritePin(GPIOB, SPI1_WP_Pin, GPIO_PIN_RESET);
+//	framWriteEnable ();
+//	cy_println ("framReadStatus() = 0x%02x", framReadStatus ());
+
+//	framWriteBytes (0, data_buf, sizeof (data_buf));
+//	framReadBytes (0, data_buf, sizeof (data_buf));
+//	for (i = 0; i < sizeof (data_buf); i++){
+//		cy_println ("framReadOneByte(%d) = 0x%02x", i, data_buf[i]);
+//	}
+//	cy_println ("framReadStatus() = 0x%02x", framReadStatus ());
 //  if (HAL_ADC_Start_IT(&hadc1) != HAL_OK)
 //  {
 //    /* Start Conversation Error */
@@ -261,12 +290,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		HAL_GPIO_TogglePin (GPIOC, User_Led_Pin);
 	}
+  if (htim->Instance == TIM13) {
+    ulHighFrequencyTimerTicks++;
+  }
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM14) {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+	if (htim->Instance == TIM14){
+		coin_time_period_1ms ();
+	}
   /* USER CODE END Callback 1 */
 }
 

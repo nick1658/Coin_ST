@@ -66,7 +66,7 @@ extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN Private defines */
-#define RX_LEN 1024  
+#define RX_LEN 128  
 	 
 typedef struct  
 {  
@@ -74,7 +74,7 @@ uint8_t  RX_flag:1;        //IDLE receive flag
 uint16_t RX_temp;          //receive length
 }USART_RECEIVETYPE;  
    
-extern USART_RECEIVETYPE UsartType; 
+extern USART_RECEIVETYPE Usart1Type; 
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);

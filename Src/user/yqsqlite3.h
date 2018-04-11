@@ -3,6 +3,10 @@
 #define __TQ2416_YQSQLITE3_H__
 
 
+#define FRAM_PARA_SET_VALUE_ADDR 2048
+#define FRAM_COIN_PRE_VALUE_ADDR	FRAM_PARA_SET_VALUE_ADDR + 4096
+
+
 #define APP_NAND_ADDR 10*64*2048 //应用程序存放地址 为Block 10 Page 0处
 #define APP_NAND_SIZE 256*1024 //应用程序大小暂定为256K (共占2个BLOCK)
 
@@ -157,6 +161,7 @@ extern u_coin_parameter_value para_set_value;
 
 typedef struct
 {
+	uint16_t magic_num;
 	int16_t max0;
 	int16_t min0;
 	int16_t max1;

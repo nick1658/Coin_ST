@@ -52,31 +52,60 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN Includes */     
+#include "stm32f4xx_hal.h"
+#include "adc.h"
+#include "tim.h"
+#include "usart.h"
 #include "user_app.h"
 #include "cpu_utils.h"
+#include "httpd.h"
 /* USER CODE END Includes */
 
 /* Variables -----------------------------------------------------------------*/
 osThreadId userLedTaskHandle;
 osThreadId shellTaskHandle;
+osThreadId StartTaskHandle;
+osThreadId TouchScreenTaskHandle;
 
 /* USER CODE BEGIN Variables */
+extern uint32_t tim3_v_old, tim3_v_new;
 extern uint32_t ADC_Value[3];
 uint32_t idl_cnt = 0;
+uint8_t aTxMessage[] = "\r\n*** UART-Hyperterminal communication based on DMA ***\r\n";
 /* USER CODE END Variables */
 
 /* Function prototypes -------------------------------------------------------*/
 void startUserLed(void const * argument);
 void StartShell(void const * argument);
+void startTask(void const * argument);
+void touchScreenTask(void const * argument);
 
+extern void MX_LWIP_Init(void);
+extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* USER CODE BEGIN FunctionPrototypes */
 /* USER CODE END FunctionPrototypes */
 
 /* Hook prototypes */
+void configureTimerForRunTimeStats(void);
+unsigned long getRunTimeCounterValue(void);
 void vApplicationIdleHook(void);
 void vApplicationTickHook(void);
+
+/* USER CODE BEGIN 1 */
+extern volatile uint32_t ulHighFrequencyTimerTicks;
+/* Functions needed when configGENERATE_RUN_TIME_STATS is on */
+__weak void configureTimerForRunTimeStats(void)
+{
+
+}
+
+__weak unsigned long getRunTimeCounterValue(void)
+{
+return 12563;
+}
+/* USER CODE END 1 */
 
 /* USER CODE BEGIN 2 */
 __weak void vApplicationIdleHook( void )
@@ -128,12 +157,20 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of userLedTask */
-  osThreadDef(userLedTask, startUserLed, osPriorityNormal, 0, 64);
+  osThreadDef(userLedTask, startUserLed, osPriorityNormal, 0, 256);
   userLedTaskHandle = osThreadCreate(osThread(userLedTask), NULL);
 
   /* definition and creation of shellTask */
-  osThreadDef(shellTask, StartShell, osPriorityNormal, 0, 128);
+  osThreadDef(shellTask, StartShell, osPriorityNormal, 0, 256);
   shellTaskHandle = osThreadCreate(osThread(shellTask), NULL);
+
+  /* definition and creation of StartTask */
+  osThreadDef(StartTask, startTask, osPriorityIdle, 0, 256);
+  StartTaskHandle = osThreadCreate(osThread(StartTask), NULL);
+
+  /* definition and creation of TouchScreenTask */
+  osThreadDef(TouchScreenTask, touchScreenTask, osPriorityIdle, 0, 256);
+  TouchScreenTaskHandle = osThreadCreate(osThread(TouchScreenTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -147,7 +184,12 @@ void MX_FREERTOS_Init(void) {
 /* startUserLed function */
 void startUserLed(void const * argument)
 {
-extern uint32_t tim3_v_old, tim3_v_new;
+  /* init code for LWIP */
+  MX_LWIP_Init();
+
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
+
   /* USER CODE BEGIN startUserLed */
 	osDelay(100);
 	//puts("Hello world!\r");
@@ -155,21 +197,18 @@ extern uint32_t tim3_v_old, tim3_v_new;
 	//putchar('B');
 	//uint8_t ch = 'A';
   /* Infinite loop */
+	httpd_init ();
 	extern int16_t ad0_ad_value, ad1_ad_value, ad2_ad_value;
   for(;;)
   {
     osDelay(1000);
-		if (sys_env.ad_rd == 1){
-			sys_env.ad_rd = 0;
-			//cy_println ("AD0:	%d,	AD1:	%d,	AD2:	%d", ADC_Value[0], ADC_Value[1], ADC_Value[2]);
-			cy_println ("AD0:	%d,	AD1:	%d,	AD2:	%d", ad0_ad_value,
-																						 ad1_ad_value, 
-																						 ad2_ad_value);
-		}
+//		if (sys_env.workstep == 10){
+//			cy_println ("motor_pwm:%d", motor_pwm_count);
+//		}
     //获取CPU使用率并串口打印
     //usage = osGetCPUUsage();
-    cy_println("CPU Usage: %d%%",osGetCPUUsage());
-		cy_println("main_task process time: %d - %d = %d us", tim3_v_new , tim3_v_old , (tim3_v_new - tim3_v_old));
+//    cy_println("CPU Usage: %d%%",osGetCPUUsage());
+//		cy_println("main_task process time: %d - %d = %d us", tim3_v_new , tim3_v_old , (tim3_v_new - tim3_v_old));
 			
 		//HAL_GPIO_WritePin (GPIOC, User_Led_Pin, GPIO_PIN_RESET);
 		//HAL_GPIO_WritePin (GPIOC, User_Led_Pin, GPIO_PIN_SET);
@@ -185,23 +224,106 @@ void StartShell(void const * argument)
   /* USER CODE BEGIN StartShell */
   /* Infinite loop */
 //	uint16_t rec_size = 0;
-	sys_env.workstep = 10;
+	Usart1Type.RX_flag = 0;
   for(;;)
   { 
     osDelay(100);
-		if(UsartType.RX_flag){    	// Receive flag
+		if(Usart1Type.RX_flag){    	// Receive flag
 			//taskENTER_CRITICAL ();
-			//while (UsartType.RX_flag);
+			//while (Usart1Type.RX_flag);
 			//taskEXIT_CRITICAL ();
-			UsartType.RX_flag = 0;
-			fill_rec_buf (UsartType.RX_temp);
+			Usart1Type.RX_flag = 0;
+			fill_rec_buf (Usart1Type.RX_temp);
 		}
   }
   /* USER CODE END StartShell */
 }
 
+/* startTask function */
+void startTask(void const * argument)
+{
+  /* USER CODE BEGIN startTask */
+  HAL_GPIO_WritePin(LAN8720_RST_GPIO_Port, LAN8720_RST_Pin, GPIO_PIN_SET);
+  HAL_UART_Transmit_DMA(&huart1, (uint8_t *)aTxMessage, sizeof(aTxMessage));
+  __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE); 
+	
+	HAL_UART_Receive_DMA(&huart3, touchScreenDataBuffer, TOUCH_SCREEN_DATA_BUF_LEN); 
+  __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE); //
+	
+	HAL_TIM_Base_Start_IT(&htim3);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&ADC_Value, 3);
+	coin_init ();
+	cy_println ("[Please press ENTER to activate this console]");
+	readNandId ();
+	HAL_GPIO_WritePin(GPIOC, Nand_WP_Pin, GPIO_PIN_SET);
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(10);
+    normalTask();
+  }
+  /* USER CODE END startTask */
+}
+
+/* touchScreenTask function */
+void touchScreenTask(void const * argument)
+{
+  /* USER CODE BEGIN touchScreenTask */
+  /* Infinite loop */
+	touchScreenDataFlag = 0;
+  for(;;)
+  {
+    osDelay(100);
+		if (touchScreenDataFlag == 1){
+			touchresult();//判断触摸 状态的函数
+			touchScreenDataFlag =0;
+		}
+  }
+  /* USER CODE END touchScreenTask */
+}
+
 /* USER CODE BEGIN Application */
-     
+uint8_t pcWriteBuffer[500];
+void taskStatus(void )
+{
+#if 1
+	UBaseType_t   ArraySize;
+    TaskStatus_t  *StatusArray;
+    uint8_t       x;
+	uint32_t FreeRTOSRunTimeTicks;
+
+    ArraySize = uxTaskGetNumberOfTasks(); //获取任务个数
+    StatusArray = pvPortMalloc(ArraySize*sizeof(TaskStatus_t));
+   // while(1)
+    {
+        if(StatusArray != NULL){ //内存申请成功
+
+            ArraySize = uxTaskGetSystemState( (TaskStatus_t *)  StatusArray,
+                                              (UBaseType_t   ) ArraySize,
+                                              (uint32_t *    )  &FreeRTOSRunTimeTicks );
+
+            cy_println("        TaskName\tPriority\tTaskNumber\tMinStk\t");
+            for(x = 0;x<ArraySize;x++){
+
+                cy_println("%16s\t%d\t\t%d\t\t%d\t%d%%",
+                        StatusArray[x].pcTaskName,
+                        (int)StatusArray[x].uxCurrentPriority,
+                        (int)StatusArray[x].xTaskNumber,
+                        (int)StatusArray[x].usStackHighWaterMark,
+                        (int)((float)StatusArray[x].ulRunTimeCounter/FreeRTOSRunTimeTicks*100));
+            }
+            cy_println();
+        }
+    }
+#else
+	printf("=================================================\r\n"); 
+	vTaskList((char *)&pcWriteBuffer); 
+	printf("%s\r\n", pcWriteBuffer); 
+	printf("-------------------------------------------------\r\n"); 
+	vTaskGetRunTimeStats((char *)&pcWriteBuffer); 
+	printf("%s\r\n", pcWriteBuffer);
+#endif
+}
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

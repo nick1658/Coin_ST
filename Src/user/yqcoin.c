@@ -28,6 +28,16 @@ uint16_t coine[COINCNUM][COIN_TYPE_NUM]=     // 由币种决定
 {200,	100,50,20,10,5,2,1,0, 0, 	0},//英镑的 的面值 倍数
 };
 
+void coin_time_period_1ms (void)
+{
+	if (sys_env.stop_time > 0){sys_env.stop_time--;}
+	if (sys_env.system_delay > 0){sys_env.system_delay--;}
+	if (runtime > 0){runtime--;}
+	if (blockflag > 0){blockflag--;}				
+	if (adtime > 0){adtime--;}
+	motor_pwm_count++;
+}
+
 
 void prepare_coin_cmp_value (void)
 {		
@@ -66,11 +76,11 @@ int16_t is_good_coin (void)
 			&& (( coin_value2 >= coin_cmp_value[i].compare_min2) && ( coin_value2 <= coin_cmp_value[i].compare_max2)))
 		{
 			if (sys_env.save_good_data){
-//				GOOD_value_buf[good_value_index].AD0 = coin_value0;
-//				GOOD_value_buf[good_value_index].AD1 = coin_value1;
-//				GOOD_value_buf[good_value_index].AD2 = coin_value2;
-//				GOOD_value_buf[good_value_index].use_index = coin_env.cmp_use_index;
-//				GOOD_value_buf[good_value_index].ad_index = coin_env.ad_index;
+				GOOD_value_buf[good_value_index].AD0 = coin_value0;
+				GOOD_value_buf[good_value_index].AD1 = coin_value1;
+				GOOD_value_buf[good_value_index].AD2 = coin_value2;
+				GOOD_value_buf[good_value_index].use_index = coin_env.cmp_use_index;
+				GOOD_value_buf[good_value_index].ad_index = coin_env.ad_index;
 				good_value_index++;
 				if (good_value_index >= GOOD_BUF_LENGTH)
 					good_value_index = 0;
@@ -79,11 +89,11 @@ int16_t is_good_coin (void)
 		}	
 	}
 	if (sys_env.save_ng_data){//
-//		NG_value_buf[ng_value_index].AD0 = coin_value0;
-//		NG_value_buf[ng_value_index].AD1 = coin_value1;
-//		NG_value_buf[ng_value_index].AD2 = coin_value2;
-//		NG_value_buf[ng_value_index].use_index = coin_env.cmp_use_index;
-//		NG_value_buf[ng_value_index].ad_index = coin_env.ad_index;
+		NG_value_buf[ng_value_index].AD0 = coin_value0;
+		NG_value_buf[ng_value_index].AD1 = coin_value1;
+		NG_value_buf[ng_value_index].AD2 = coin_value2;
+		NG_value_buf[ng_value_index].use_index = coin_env.cmp_use_index;
+		NG_value_buf[ng_value_index].ad_index = coin_env.ad_index;
 		ng_value_index++;
 		if (ng_value_index >= NG_BUF_LENGTH)
 			ng_value_index = 0;
@@ -104,7 +114,7 @@ void cy_precoincount(void)
 			sys_env.stop_flag = 0;
 			sys_env.stop_time = STOP_TIME;//无币停机时间10秒
 		}
-		if ((good_coin < 0) ||  ((para_set_value.data.coin_full_rej_pos == 1) && 
+		if ((good_coin < 0) ||  ((para_set_value.data.coin_full_rej_pos == 1/*工位1剔除真币*/) && 
 								 ((*(pre_value.country[COUNTRY_ID].coin[good_coin].data.p_pre_count_set) == 0) ||
 								  (*pre_value.country[COUNTRY_ID].coin[good_coin].data.p_pre_count_full_flag == 1)))){ //假币 返回值小于0
 			if (coin_env.kick_Q[coin_env.kick_Q_index] == 0){
@@ -112,7 +122,7 @@ void cy_precoincount(void)
 				coin_env.kick_Q_index++;
 				coin_env.kick_Q_index %= KICK_Q_LEN;
 				coin_env.coin_Q[coin_env.coin_Q_remain] = COIN_NG_FLAG;//
-			}else{//剔除工位1队列追尾错误
+			}else{//剔除工位1队列咬尾错误
 				SEND_ERROR(KICK1COINERROR);
 				dbg ("kick1 error alertflag = %d %s, %d", KICK1COINERROR,  __FILE__, __LINE__);
 			}
@@ -140,7 +150,7 @@ void cy_precoincount(void)
 					}
 				}
 			}
-			coin_env.coin_Q_remain++;//鉴伪传感器和红外传感器之间有个硬币循环队列，深度为16，表示之间最多可以夹16个硬币
+			coin_env.coin_Q_remain++;//鉴伪传感器和红外传感器之间有个硬币队列，深度为16，表示之间最多可以容纳16个硬币
 			coin_env.coin_Q_remain %= COIN_Q_LEN;
 		}
 		processed_coin_info.total_coin++;
@@ -277,6 +287,9 @@ void alertfuc(uint16_t errorflag) //报错
 			break;	
 		case COMPLETE_UPDATE:
 			ALERT_MSG ("提示", "程序更新完成，请断电重新启动");
+			break;
+		case STORAGE_MOTOR_ERROR:
+			ALERT_MSG ("提示", "转盘卡币，请清理后再启动");
 			break;
 		default:
 			ALERT_MSG ("提示", "异常，请断电重新启动");

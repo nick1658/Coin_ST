@@ -2,92 +2,19 @@
 #include "main.h"
 #include "user_app.h"
 
-void comscreen(uint8_t* str,int16_t length)  //发送 指令至液晶屏57600bps
+void comscreen(uint8_t* str, int16_t length)  //发送 指令至液晶屏57600bps
 {
-	uint32_t i;
-	uint8_t temp;
-	for(i = 0;i<length;i++)
-	{
-		temp = 	*str;
-//		Uart2_sendchar(temp);	
-		str++;
-	}	
-	
+	while (HAL_UART_Transmit_DMA(&huart3, (uint8_t *)str, length) != HAL_OK);
 }
 
 /*********************************
 DGUS(UART 1)  read touch back values
-**********************************/
-char touch_serialnum[TSGET_NUM] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-volatile uint8_t touchnum[TSGET_NUM] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-volatile uint16_t uartcount = 0;  // 串口2接收 字节 计数
-volatile uint16_t touch_flag =0;  // 串口2接收 标志位
+**********************************/ 
+uint8_t touchScreenDataBuffer[TOUCH_SCREEN_DATA_BUF_LEN] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+uint16_t touchScreenDataCount = 0;  // 串口2接收 字节 计数
+uint16_t touchScreenDataFlag = 0;  // 串口2接收 标志位
 void touchget_from_uart2(void)    //receive the touch from dgus at real time 
 {
-
-	uint8_t temp;
-//	while(!(rUTRSTAT2&0x1));
-//	temp = rURXH2;//读取寄存器值
-	
-	if(touch_flag ==0)
-	{
-		if( (uartcount == 0)&& (temp == 0xA5))//0xa5 引索
-		{
-			touchnum[uartcount] = temp;
-//			cy_print("%d:%x ",uartcount,touchnum[uartcount]);
-			uartcount++;
-		}
-		else if( (uartcount == 1)&& (temp == 0x5A))//0x5a 引索
-		{
-			touchnum[uartcount] = temp;
-//			cy_print("%d:%x ",uartcount,touchnum[uartcount]);
-			uartcount++;
-		}
-		else if( (uartcount == 2))//字节数
-		{
-			touchnum[uartcount] = temp;
-//			cy_print("%d:%x ",uartcount,touchnum[uartcount]);
-			uartcount++;
-		}
-		//总共要接受的字节数 + 3是因为有数据帧头A5 5A 和长度共三个字节
-		else if( (uartcount > 2)&& (uartcount < (touchnum[2]+3)))
-		{
-			touchnum[uartcount] = temp;
-//			cy_print("%d:%x ",uartcount,touchnum[uartcount]);
-			if((uartcount ==  (touchnum[2]+2)))
-			{
-				touch_flag =1; //触摸屏数据接收完成
-				////////////////////////////////////////////////////////////////////////////////////////
-//				temp = touchnum[2]+3;
-//				cy_println ("\n---------------------------------------------------------");
-//				for( uartcount=0;uartcount<temp;uartcount++)//TSGET_NUM = 12
-//				{
-//					cy_print("%02d ",uartcount);
-//				}
-//				cy_print("\n");
-//				for( uartcount=0;uartcount<temp;uartcount++)//TSGET_NUM = 12
-//				{
-//					touchnum[uartcount]  = touchnum[uartcount];
-//					cy_print("%02x ",touchnum[uartcount]);
-//				}
-//				cy_print("\n");
-				/////////////////////////////////////////////////////////////////////////////////////
-				uartcount = 0;
-				return;
-			}
-			uartcount++;
-		}
-		else
-		{
-			cy_print("U %d ",uartcount);
-			uartcount = 0;
-		}
-	}
-	else 
-	{
-		uartcount = 0;
-	}
-	return;
 }
 
 /*********************************
@@ -96,6 +23,7 @@ DGUS(UART 1) beep
 uint8_t dgus_beep[6]={0xA5,0x5A,0x03,0x80,0x02,0x64};   // 10ms * 100
 void dgus_tfbeep(int bztime)    //uart1,dgus deep control
 {
+	while(huart3.gState != HAL_UART_STATE_READY);
  	dgus_beep[5]=(bztime)&0xff;    
 	comscreen(dgus_beep,6);		
 }
@@ -111,18 +39,18 @@ DGUS(UART 1) read real time from dgus
 /*********************************
 chinese 
 **********************************/
+static uint8_t chineseStr1[6] = {0xA5,0x5A,0x00,0x82,0x0F,0x00};
+static uint8_t chineseStr2[2] = {0xFF,0xFF};
 void dgus_chinese(uint16_t addr,uint8_t str[],uint16_t strnum)    // dgus  chinese
 {
-
-	uint8_t str1[6] = {0xA5,0x5A,0x00,0x82,0x0F,0x00};
-	uint8_t str2[2] = {0xFF,0xFF};
-	str1[5]=(addr)&0xff;    
-	str1[4]=(addr>>8)&0xff;
-	str1[2]=(strnum+5)&0xff;
+	while(huart3.gState != HAL_UART_STATE_READY);
+	chineseStr1[5]=(addr)&0xff;    
+	chineseStr1[4]=(addr>>8)&0xff;
+	chineseStr1[2]=(strnum+5)&0xff;
 	//cy_print("str1[2] = %d \r\n",str1[2]);
-	comscreen(str1,6);	//type corporation
+	comscreen(chineseStr1,6);	//type corporation
 	comscreen((uint8_t*)str,strnum);	//type corporation
-	comscreen(str2,2);	//type corporation
+	comscreen(chineseStr2,2);	//type corporation
 }
 
 /*********************************
@@ -133,6 +61,7 @@ values for specified address
 uint8_t dgus_2word[10]={0xA5,0x5A,0x07,0x82,0x00,0x00,0x00,0x00,0x00,0x00};  // write 2-word to  data register
 void dgus_tf2word(int addr,long data)    //transfer 2word data variables to specify address 
 {
+	while(huart3.gState != HAL_UART_STATE_READY);
  	dgus_2word[9]=(data)&0xff;    
 	dgus_2word[8]=(data>>8)&0xff;
 	dgus_2word[7]=(data>>16)&0xff;
@@ -145,7 +74,7 @@ void dgus_tf2word(int addr,long data)    //transfer 2word data variables to spec
 uint8_t dgus_1word[8]= {0xA5,0x5A,0x05,0x82,0x00,0x00,0x00,0x00};   //write 1-word to  data register
 void dgus_tf1word(int addr,long data)    //transfer values to specifed address 
 {
-
+	while(huart3.gState != HAL_UART_STATE_READY);
 	dgus_1word[7]=(data)&0xff; 
 	dgus_1word[6]=(data>>8)&0xff;
  	dgus_1word[5]=(addr)&0xff;    
@@ -516,8 +445,10 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 {
 	uint16_t addr, value, i;
 	uint8_t str_buf[256];
-	addr = (touchnum[4] << 8) | (touchnum[5]);
-	value = (touchnum[7] << 8) | (touchnum[8]);
+	if ((touchScreenDataBuffer[2] + 3) != touchScreenDataCount)
+		return;
+	addr = (touchScreenDataBuffer[4] << 8) | (touchScreenDataBuffer[5]);
+	value = (touchScreenDataBuffer[7] << 8) | (touchScreenDataBuffer[8]);
 	///////////////A5 5A 06 83 00 06 01 00 0x:1 2/////////////////////////
 	switch (addr){
 	case ADDR_CRUN:  //地址ADDR_CRUN 0X06  按键返回值判断 
@@ -545,7 +476,7 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 				comscreen(Disp_Indexpic[TZYX],Number_IndexpicB);  // back to the  picture before alert
 
 				sys_env.workstep =13;	
-				cy_print("start learning %s %d\n", __FILE__, __LINE__);
+				cy_println("start learning %s %d", __FILE__, __LINE__);
 			}	
 		}else if( (value == 0x02)){	
 			 //A5 5A 06 83 00 3C 01 00 02	特征学习 stop					
@@ -558,7 +489,7 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		break;
 	////////////////////////////////////////////////
 	case ADDR_PGH1:  //地址ADDR_PGH1 0X07 
-		para_set_value.data.coin_full_rej_pos = (int)touchnum[8];
+		para_set_value.data.coin_full_rej_pos = (int)touchScreenDataBuffer[8];
 		dgus_tf1word(ADDR_PGH1,para_set_value.data.coin_full_rej_pos);	//make sure  the return one
 		Writekick_value();
 		sys_env.workstep = 0;	// 等待 触摸
@@ -584,7 +515,7 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 			sys_env.workstep = 0;	// 等待 触摸
 		}else if( (value == 0x04)){	//back value 04  delete jiemian
 		   // A5 5A 06 83 00 09 01 00 04  按键值返回 删除当前的总条数 数量 金额 异币	
-			cy_print ("Delete History Data\n");		
+			cy_println ("Delete History Data");		
 			para_set_value.data.total_money = 0;
 			para_set_value.data.total_good = 0;
 			para_set_value.data.total_ng = 0;
@@ -601,12 +532,12 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 			sys_env.workstep = 0;	// 等待 触摸
 		}else if( (value == 0x07)){	//back value   history data jiemian  
 		 // A5 5A 06 83 00 09 01 00 07  按键值返回 查看下页
-			cy_print ("Pre page\n");
+			cy_println ("Pre page");
 			yqsql_exec(DBDISPLAY);	  /////////////////////////////////////////////////////////////////
 			sys_env.workstep = 0;	// 等待 触摸
 		}else if( (value == 0x08)){	//back value    history data jiemian  
 		// A5 5A 06 83 00 09 01 00 08  按键值返回 查看上页	
-			cy_print ("Next page\n");
+			cy_println ("Next page");
 			yqsql_exec(DBDISPLAYBACK);	  /////////////////////////////////////////////////////////
 			sys_env.workstep = 0;	// 等待 触摸
 		}
@@ -615,7 +546,7 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 	case ADDR_TZBC:  //地址ADDR_B1  0X08 按键返回值判断 //back value  / 特征学习 save or not
 		if( (value == 0x03)){	//back value 04 混计数界面 xiandan
 			// A5 5A 06 83 00 08 01 00 03  按键值返回	详单
-			cy_print("display xiandan\r\n");
+			cy_println("display xiandan");
 			disp_allcount();
 			comscreen(Disp_Indexpic[XDJM],Number_IndexpicB);	 //  to the  picture 		
 			sys_env.workstep = 0;	// 等待 触摸
@@ -717,7 +648,7 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		break;
 //////////////////////////////
 	case ADDR_CNTB1:  //地址ADDR_CNTB1 0X3B  图标变量
-		sys_env.coin_index = (int)touchnum[8];
+		sys_env.coin_index = (int)touchScreenDataBuffer[8];
 		dgus_tf1word(ADDR_CNTB,sys_env.coin_index);	//make sure the tubiao is the return one
 		disp_preselflearn(pre_value.country[coinchoose].coin[sys_env.coin_index].data.max0, pre_value.country[coinchoose].coin[sys_env.coin_index].data.min0,
 						  pre_value.country[coinchoose].coin[sys_env.coin_index].data.max1, pre_value.country[coinchoose].coin[sys_env.coin_index].data.min1,
@@ -725,45 +656,45 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
 		break;
 	case ADDR_KICK_DELAY_T1:  //地址ADDR_KICK_DELAY_T1 0X56 踢币延时
-		para_set_value.data.kick_start_delay_t1 = (int)(touchnum[7]*256 )+(int)touchnum[8];       //delay time 
+		para_set_value.data.kick_start_delay_t1 = (int)(touchScreenDataBuffer[7]*256 )+(int)touchScreenDataBuffer[8];       //delay time 
 		dgus_tf1word(ADDR_KICK_DELAY_T1, para_set_value.data.kick_start_delay_t1);	//make sure the return one
 		Writekick_value();
 		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
 		break;
 	case ADDR_KICK_KEEP_T1:  //地址ADDR_KBDT1 0X57 踢币time
-		para_set_value.data.kick_keep_t1 = (int)(touchnum[7]*256 )+(int)touchnum[8];       //kick time 
+		para_set_value.data.kick_keep_t1 = (int)(touchScreenDataBuffer[7]*256 )+(int)touchScreenDataBuffer[8];       //kick time 
 		dgus_tf1word(ADDR_KICK_KEEP_T1, para_set_value.data.kick_keep_t1);	//make sure  the return one
 		Writekick_value();
 		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
 		break;
 	case ADDR_KICK_DELAY_T2:  
-		para_set_value.data.kick_start_delay_t2 = (int)(touchnum[7]*256 )+(int)touchnum[8];       //delay time 
+		para_set_value.data.kick_start_delay_t2 = (int)(touchScreenDataBuffer[7]*256 )+(int)touchScreenDataBuffer[8];       //delay time 
 		dgus_tf1word(ADDR_KICK_DELAY_T2, para_set_value.data.kick_start_delay_t2);	//make sure the return one
 		Writekick_value();
 		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
 		break;
 	case ADDR_KICK_KEEP_T2:  //地址ADDR_KBDT1 0X57 踢币time
-		para_set_value.data.kick_keep_t2 = (int)(touchnum[7]*256 )+(int)touchnum[8];       //kick time 
+		para_set_value.data.kick_keep_t2 = (int)(touchScreenDataBuffer[7]*256 )+(int)touchScreenDataBuffer[8];       //kick time 
 		dgus_tf1word(ADDR_KICK_KEEP_T2, para_set_value.data.kick_keep_t2);	//make sure  the return one
 		Writekick_value();
 		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
 		break;
 	case ADDR_MOTOR_IDLE_T:  //
-		para_set_value.data.motor_idle_t = (int)(touchnum[7]*256 )+(int)touchnum[8];       //kick time 
+		para_set_value.data.motor_idle_t = (int)(touchScreenDataBuffer[7]*256 )+(int)touchScreenDataBuffer[8];       //kick time 
 		dgus_tf1word(ADDR_MOTOR_IDLE_T, para_set_value.data.motor_idle_t);	//make sure  the return one
 		Writekick_value();
 		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
 		break;
 	case ADDR_PRE_COUNT_STOP_N: 
-		para_set_value.data.pre_count_stop_n = (int)(touchnum[7]*256 )+(int)touchnum[8];       //
+		para_set_value.data.pre_count_stop_n = (int)(touchScreenDataBuffer[7]*256 )+(int)touchScreenDataBuffer[8];       //
 		dgus_tf1word(ADDR_PRE_COUNT_STOP_N, para_set_value.data.pre_count_stop_n);	//
 		Writekick_value();
 		sys_env.workstep = 0;	//停止	所有动作  // 等待 触摸
 		break;
 //	case ADDR_LEVEL100:  //地址1元硬币的清分等级设置
-// 		cn0copmaxc0[coinchoose]= ((int)touchnum[8]);	   //
-//		cn0copmaxc1[coinchoose] = ((int)touchnum[8]);
-//		cn0copmaxc2[coinchoose] = ((int)touchnum[8]);
+// 		cn0copmaxc0[coinchoose]= ((int)touchScreenDataBuffer[8]);	   //
+//		cn0copmaxc1[coinchoose] = ((int)touchScreenDataBuffer[8]);
+//		cn0copmaxc2[coinchoose] = ((int)touchScreenDataBuffer[8]);
 //		dgus_tf1word(ADDR_LEVEL100,cn0copmaxc0[coinchoose]);	//make sure  the return one
 // 
 //		write_para ();
@@ -775,13 +706,13 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 	case ADDR_YZS4:
 	case ADDR_YZS6:
 	case ADDR_YZS7:
-	case ADDR_YZint8_t:
+	case ADDR_YZS8:
 	case ADDR_YZS9:
 	case ADDR_YZS10:
 ///////////////////////////////////////////////////////
 		for (i = 0; i < COIN_TYPE_NUM; i++){
 			if (addr == pre_value.country[COUNTRY_ID].coin[i].data.hmi_pre_count_set_addr){
-				*pre_value.country[COUNTRY_ID].coin[i].data.p_pre_count_set =  (int)(touchnum[7]*256 )+(int)touchnum[8];
+				*pre_value.country[COUNTRY_ID].coin[i].data.p_pre_count_set =  (int)(touchScreenDataBuffer[7]*256 )+(int)touchScreenDataBuffer[8];
 				*pre_value.country[COUNTRY_ID].coin[i].data.p_pre_count_cur = 0;//当前计数值 清零
 				*pre_value.country[COUNTRY_ID].coin[i].data.p_pre_count_full_flag = 0;
 				if (para_set_value.data.system_mode == 0){
@@ -847,13 +778,13 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		if( (value == 0x00)){	//0灰 1绿   						
 			dgus_tf1word(ADDR_KICK1_M,0);
 		}else if( (value == 0x01)){	// 踢币电磁铁1动作 	
-			time = para_set_value.data.kick_start_delay_t1; //kick_start_delay_time*0.1ms
+			kicktime = para_set_value.data.kick_start_delay_t1; //kick_start_delay_time*0.1ms
 			dgus_tf1word(ADDR_KICK1_M,1);
-			while(time != 0){;}
+			while(kicktime != 0){;}
 			EMKICK1(STARTRUN);	  // kick out 
 			cy_println ("kick1 start");
-			time = para_set_value.data.kick_keep_t1;	  //kick_keep_time*0.1ms
-			while(time != 0){;}
+			kicktime = para_set_value.data.kick_keep_t1;	  //kick_keep_time*0.1ms
+			while(kicktime != 0){;}
 			EMKICK1(STOPRUN);	  // kick in 
 			cy_println ("kick1 stop");
 			dgus_tf1word(ADDR_KICK1_M,0);
@@ -863,13 +794,13 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		if( (value == 0x00)){	// 0灰 1绿  		
 			dgus_tf1word(ADDR_KICK2_M,0);
 		}else if( (value == 0x01)){	 //踢币电磁铁2动作 	
-			time = para_set_value.data.kick_start_delay_t2; //kick_start_delay_time*1ms	
+			kicktime = para_set_value.data.kick_start_delay_t2; //kick_start_delay_time*1ms	
 			dgus_tf1word(ADDR_KICK2_M,1);
-			while(time != 0){;}
+			while(kicktime != 0){;}
 			EMKICK2(STARTRUN);	  // kick out 
 			cy_println ("kick2 start");
-			time = para_set_value.data.kick_keep_t2;	  //kick_keep_time*1ms
-			while(time != 0){;}
+			kicktime = para_set_value.data.kick_keep_t2;	  //kick_keep_time*1ms
+			while(kicktime != 0){;}
 			EMKICK2(STOPRUN);	  // kick in 
 			cy_println ("kick2 stop");
 			dgus_tf1word(ADDR_KICK2_M,0);
