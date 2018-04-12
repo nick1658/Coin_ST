@@ -226,7 +226,56 @@ int do_set (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 					cy_println ("value must be > 0");
 				}
 				break;
-			}          
+			}
+			
+		case 2:
+			if (strcmp (argv[1], "save") == 0){
+				if (is_repeate (sys_env.coin_index))
+				{
+					cy_println ("**********************************************************");
+					cy_println ("**The Value May Be not Correct so Data Will not be Saved**");
+					cy_println ("**********************************************************");
+					return -1;
+				}
+				if (coinlearnnumber == 0)
+				{                                                                         
+					dbg ("coinlearnnumber = %d, No data to save arg", coinlearnnumber); 
+					return -1;
+				}
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.max0 = coin_maxvalue0;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.min0 = coin_minvalue0;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.max1 = coin_maxvalue1;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.min1 = coin_minvalue1;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.max2 = coin_maxvalue2;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.min2 = coin_minvalue2;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.std0 = std_ad0;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.std1 = std_ad1;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.std2 = std_ad2;
+				write_para ();
+				dbg ("Total learned coin number is %d", coinlearnnumber);
+				coinlearnnumber = 0;
+				prepic_num = TZJM;
+				comscreen(Disp_Indexpic[prepic_num],Number_IndexpicB); //ÏÔÊ¾
+				dbg ("Save Complete"); 
+				return 0;
+			}else if (strcmp (argv[1], "save-f") == 0){
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.max0 = coin_maxvalue0;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.min0 = coin_minvalue0;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.max1 = coin_maxvalue1;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.min1 = coin_minvalue1;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.max2 = coin_maxvalue2;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.min2 = coin_minvalue2;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.std0 = std_ad0;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.std1 = std_ad1;
+				pre_value.country[coinchoose].coin[sys_env.coin_index].data.std2 = std_ad2;
+				write_para ();
+				dbg ("Total learned coin number is %d", coinlearnnumber);
+				coinlearnnumber = 0;
+				prepic_num = TZJM;
+				comscreen(Disp_Indexpic[prepic_num],Number_IndexpicB); //ÏÔÊ¾
+				dbg ("Save Complete");  
+				return 0;
+			}           
 			break;
 		default:
 			cy_print ("Usage:%s", cmdtp->usage);return 1;
@@ -434,6 +483,10 @@ int do_print (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 				print_system_env_info(); 
 			}else if (strcmp (argv[1], "env-c") == 0){
 				print_all_coin_pre_value(); 
+			}else if (strcmp (argv[1], "ng") == 0){
+				print_ng_data (simple_strtol (argv[2], NULL, 10)); 
+			}else if (strcmp (argv[1], "gd") == 0){
+				print_good_data (simple_strtol (argv[2], NULL, 10));
 			}
 			break;
 		default:break;

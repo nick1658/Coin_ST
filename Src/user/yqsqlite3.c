@@ -186,7 +186,7 @@ void read_para(void)  //读出 当前币种 历史数据 总
 
 void write_para (void)	//写入 当前币种 历史数据 总
 {
-	test_erase_r_code (Nand_EraseBlock(PUBULIC_DATA_START_BLOCK_NUM ));
+	//test_erase_r_code (Nand_EraseBlock(PUBULIC_DATA_START_BLOCK_NUM ));
 	write_kick_value ();
 	write_coin_value ();
 }

@@ -585,7 +585,7 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 				i = is_repeate (sys_env.coin_index);
 				if (i == 0){
 					sprintf ((char *)str_buf, "特征值保存完毕！本次学习硬币数量:%d枚", coinlearnnumber);
-					run_command ("set save", 1);
+					run_command ("set save", 0);
 				}else{
 					switch (i){
 						case 1:
@@ -809,9 +809,9 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 	case ADDR_STORAGE_MOTOR:  //地址ADDR_ZXCY21 bujian zhixing 
 		if( (value == 0x00)){	 // 0灰 1绿   转盘右转   
 			STORAGE_MOTOR_STOPRUN();   //斗送入电机
-			STORAGE_DIR_P();//正转
 			dgus_tf1word(ADDR_STORAGE_MOTOR,0);
-		}else if( (value == 0x01)){	// 转盘右转								
+		}else if( (value == 0x01)){	// 转盘右转		
+			STORAGE_DIR_P();//正转						
 			STORAGE_MOTOR_STARTRUN();   //斗送入电机
 			dgus_tf1word(ADDR_STORAGE_MOTOR,1);
 		}		
@@ -843,7 +843,8 @@ void touchresult(void)      //根据接收到的  数 来决定 执行的任务
 		break;
 	case ADDR_MODE:
 		change_coin_mode (value);
-		write_para (); //写入预置值  
+		write_para (); //写入预置值 
+		//Writekick_value ();	
 		break;
 	/////////////////////////////////////////////
 	//如果是1 共公参数置0 自学习值 重新赋值  鉴别范围 重新赋值

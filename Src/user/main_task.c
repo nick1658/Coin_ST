@@ -41,8 +41,64 @@ void coin_print (void)
 
 
 int16_t is_repeate (int16_t _coin_index)
-{
-	return 0;
+{int16_t ei, i;
+	ei = 0;
+	
+	int16_t temp_coin_maxvalue0;
+	int16_t temp_coin_minvalue0;
+	int16_t temp_coin_maxvalue1;
+	int16_t temp_coin_minvalue1;
+	int16_t temp_coin_maxvalue2;
+	int16_t temp_coin_minvalue2;
+	
+	adstd_offset ();
+	
+	temp_coin_maxvalue0 = coin_maxvalue0 + pre_value.country[coinchoose].coin[_coin_index].data.offsetmax0;
+	temp_coin_minvalue0 = coin_minvalue0 + pre_value.country[coinchoose].coin[_coin_index].data.offsetmin0;
+	temp_coin_maxvalue1 = coin_maxvalue1 + pre_value.country[coinchoose].coin[_coin_index].data.offsetmax1;
+	temp_coin_minvalue1 = coin_minvalue1 + pre_value.country[coinchoose].coin[_coin_index].data.offsetmin1;
+	temp_coin_maxvalue2 = coin_maxvalue2 + pre_value.country[coinchoose].coin[_coin_index].data.offsetmax2;
+	temp_coin_minvalue2 = coin_minvalue2 + pre_value.country[coinchoose].coin[_coin_index].data.offsetmin2;
+	
+	for (i = 0; i < COIN_TYPE_NUM; i++){
+		if ( _coin_index != i){
+			//if (ng_info_echo_off != 1)
+				cy_println ("Compare with Coin %d", i);
+			if( 
+				(
+					((temp_coin_maxvalue0 >= coin_cmp_value[i].compare_max0) && (temp_coin_minvalue0 <= coin_cmp_value[i].compare_min0)) || //与1元   通道0比
+					((temp_coin_maxvalue0 <= coin_cmp_value[i].compare_max0) && (temp_coin_maxvalue0 >= coin_cmp_value[i].compare_min0)) || 
+					((temp_coin_minvalue0 <= coin_cmp_value[i].compare_max0) && (temp_coin_minvalue0 >= coin_cmp_value[i].compare_min0))
+				) && (pre_value.country[coinchoose].coin[i].data.max0 > pre_value.country[coinchoose].coin[i].data.min0) &&
+				(
+					((temp_coin_maxvalue1 >= coin_cmp_value[i].compare_max1) && (temp_coin_minvalue1 <= coin_cmp_value[i].compare_min1)) || //与1元   通道0比
+					((temp_coin_maxvalue1 <= coin_cmp_value[i].compare_max1) && (temp_coin_maxvalue1 >= coin_cmp_value[i].compare_min1)) || 
+					((temp_coin_minvalue1 <= coin_cmp_value[i].compare_max1) && (temp_coin_minvalue1 >= coin_cmp_value[i].compare_min1))
+				) && (pre_value.country[coinchoose].coin[i].data.max1 > pre_value.country[coinchoose].coin[i].data.min1) &&
+				(
+					((temp_coin_maxvalue2 >= coin_cmp_value[i].compare_max2) && (temp_coin_minvalue2 <= coin_cmp_value[i].compare_min2)) || //与1元   通道0比
+					((temp_coin_maxvalue2 <= coin_cmp_value[i].compare_max2) && (temp_coin_maxvalue2 >= coin_cmp_value[i].compare_min2)) || 
+					((temp_coin_minvalue2 <= coin_cmp_value[i].compare_max2) && (temp_coin_minvalue2 >= coin_cmp_value[i].compare_min2))
+				) && (pre_value.country[coinchoose].coin[i].data.max2 > pre_value.country[coinchoose].coin[i].data.min2) 
+			   ){
+				cy_println ("Note!!! value Repeat with Coin %d please comfirm !!!", i);
+				cy_println ("coin %d value is:", _coin_index);
+				cy_println ("min0 = %d max0 = %d", temp_coin_minvalue0, temp_coin_maxvalue0);
+				cy_println ("min1 = %d max1 = %d", temp_coin_minvalue1, temp_coin_maxvalue1);
+				cy_println ("min2 = %d max2 = %d", temp_coin_minvalue2, temp_coin_maxvalue2);
+				cy_println ("coin %d value is:", i);
+				cy_println ("min0 = %d max0 = %d", coin_cmp_value[i].compare_min0, coin_cmp_value[i].compare_max0);
+				cy_println ("min1 = %d max1 = %d", coin_cmp_value[i].compare_min1, coin_cmp_value[i].compare_max1);
+				cy_println ("min2 = %d max2 = %d", coin_cmp_value[i].compare_min2, coin_cmp_value[i].compare_max2);
+				ei = i+1;	//提示 交叉
+				return ei;
+			}
+		}
+	}
+	if(((coin_maxvalue0 - coin_minvalue0) > 100)){
+		ei = 1002;//在图标里，这个是提示 学习范围太大
+	}
+	return ei;
 }
 
 void refresh_data (void)
@@ -73,6 +129,23 @@ void refresh_data (void)
 	pc_print("%d,%d;",56, pre_value.country[coinchoose].coin[sys_env.coin_index].data.max2);
 	pc_print("%d,%d;",57, pre_value.country[coinchoose].coin[sys_env.coin_index].data.min2);
 	disp_allcount_to_pc ();
+}
+
+
+#define KICK_Q_SCAN(N) if (coin_env.kick_Q[N] > 0) {\
+	coin_env.kick_Q[N]--; \
+	if (coin_env.kick_Q[N] == 0){ \
+		EMKICK1(STARTRUN);	  \
+		processed_coin_info.total_ng++; \
+		coin_env.kick_keep_t1 = para_set_value.data.kick_keep_t1;\
+	}\
+}
+#define FULL_KICK_Q_SCAN(N) if (coin_env.full_kick_Q[N] > 0) {\
+	coin_env.full_kick_Q[N]--; \
+	if (coin_env.full_kick_Q[N] == 0){ \
+		EMKICK2(STARTRUN);	  \
+		coin_env.full_kick_keep_t2 = para_set_value.data.kick_keep_t2;\
+	}\
 }
 
 void main_task(void)
@@ -118,6 +191,25 @@ void main_task(void)
 			break;
 		}
 	}
+	
+	KICK_Q_SCAN(0);
+	KICK_Q_SCAN(1);
+	FULL_KICK_Q_SCAN(0);
+	FULL_KICK_Q_SCAN(1);
+	
+	if (coin_env.kick_keep_t1 > 0){
+		coin_env.kick_keep_t1--;
+		if (coin_env.kick_keep_t1 == 0){
+			EMKICK1(STOPRUN);
+		}
+	}
+	if (coin_env.full_kick_keep_t2 > 0){
+		coin_env.full_kick_keep_t2--;
+		if (coin_env.full_kick_keep_t2 == 0){
+			EMKICK2(STOPRUN);	
+		}
+	}
+	coin_cross_time++;
 }
 
 void normalTask (void)
@@ -209,7 +301,8 @@ void normalTask (void)
 				break;
 			}
 			case 20:{
-				if( adstd_offset() == 1){//检测 基准值    不调试到正常值  不能进行 自学习
+				//if( adstd_offset() == 1){//检测 基准值    不调试到正常值  不能进行 自学习
+				if (1) {//  检测基准值，并进行补偿
 					sys_env.workstep =22;
 				}else{
 					SEND_ERROR(ADSTDEEROR);   //  请调整基准值
